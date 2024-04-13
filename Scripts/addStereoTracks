@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Check for correct number of params
+if [[ "$#" -ne 1 ]]; then
+	echo "Illegal number of parameters (Expected: 1)">&2
+	exit 2
+fi
+
+# Check if param is valid path
+# Sets MEDIA_PATH var to param
+if [[ -d $1 ]];then
+	readonly MEDIA_PATH=$1
+	echo "Setting MEDIA_PATH to $MEDIA_PATH"
+else
+	echo "$MEDIA_PATH does not exist!">&2
+	exit 2
+fi
+
+# Find all video files in MEDIA_PATH and save the paths to tmp file
+fd -e mp4 -e mkv -e mp4 -e m4v . $MEDIA_PATH > /tmp/MEDIA_LIST
+readonly MEDIA_LIST=/tmp/MEDIA_LIST
+
+exec 3< "$MEDIA_LIST"
+
+while IFS= read -r line <&3; do
+	echo $line
+	ffprobe -i "$line" -show_entries stream=codec_type -select_streams a -v quiet | grep -c audio
+done
+exec 3<&-

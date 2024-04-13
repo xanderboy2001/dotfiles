@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+DISPLAY=:0 XAUTHORITY=/home/alex/.Xauthority notify-send "TEST"
+echo $USER
