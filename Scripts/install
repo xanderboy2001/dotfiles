@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PKGS=(eza fd fish neovim ttf-firacode-nerd ttf-noto-nerd ttf-sourcecodepro-nerd ripgrep xclip conky)
+NEEDED_PKGS=()
+
+# Checks if script is run as root, quits if not
+if [ $(id -u) -ne 0 ]; then
+		echo "ERROR: Scrpt must be run as root!"
+		exit
+fi
+
+echo "Checking for required packages..."
+for pkg in "${PKGS[@]}"; do
+		if ! pacman -Q $pkg &> /dev/null; then
+				$NEEDED_PKGS += $pkg
+		fi
+done
