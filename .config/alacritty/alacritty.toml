@@ -12,7 +12,7 @@ TERM = "alacritty"
 size = 11.0
 
 [font.normal]
-family = "Hack Nerd Font"
+family = "SauceCodePro Nerd Font Mono"
 style = "Regular"
 
 [font.offset]
