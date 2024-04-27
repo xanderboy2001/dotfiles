@@ -45,7 +45,6 @@ def workspaces():
             ),
             separator(),
             widget.WindowName(**base(fg="focus"), fontsize=15, padding=5),
-            separator(),
     ]
 
 

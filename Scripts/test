@@ -2,5 +2,5 @@
 
 set -euo pipefail
 
-DISPLAY=:0 XAUTHORITY=/home/alex/.Xauthority notify-send "TEST"
-echo $USER
+cd /home/alex/Videos/davinconv/import
+davinconv -C
