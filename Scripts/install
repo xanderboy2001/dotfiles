@@ -1,18 +1,66 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PKGS=(eza fd fish neovim ttf-firacode-nerd ttf-noto-nerd ttf-sourcecodepro-nerd ripgrep xclip conky)
-NEEDED_PKGS=()
+# Read pkgs file into PKGS array
+readarray -t PKGS < ./pkgs
+# declare an empty array to be populated later
+declare -a NEEDED_PKGS=()
+declare -a SELECTED_PKGS=()
 
-# Checks if script is run as root, quits if not
-if [ $(id -u) -ne 0 ]; then
-		echo "ERROR: Scrpt must be run as root!"
-		exit
+function check_root {
+		# Checks if script is run as root, quits if not
+		if [ $(id -u) -ne 0 ]; then
+				echo
+				echo "ERROR: Scrpt must be run as root!"
+				exit
 fi
+}
 
-echo "Checking for required packages..."
-for pkg in "${PKGS[@]}"; do
-		if ! pacman -Q $pkg &> /dev/null; then
-				$NEEDED_PKGS += $pkg
+function check_pkgs {
+		echo "Checking for required packages..."
+		# Iterates over packages in PKGS
+		for pkg in "${PKGS[@]}"; do
+				# Checks if pkg is installed, piping stdout and stderr to /dev/null
+				if ! pacman -Q $pkg &> /dev/null; then
+						# Adds packages not installed to NEEDED_PKGS
+						NEEDED_PKGS+=($pkg)
+				fi
+		done
+}
+
+function select_pkgs {
+		# if NEEDED_PKGS isn't empty
+		if ! [ -z $NEEDED_PKGS ]; then
+				echo "The following packages are are not currently installed:"
+				# Iterate over NEEDED_PKGS and print index variable
+				i=1
+				for pkg in "${NEEDED_PKGS[@]}"; do
+						echo -e "$pkg\t[$i]"
+						i=$(($i+1))
+				done
+				# Read list of nums from stdin. Corresponds to index of pkg to install
+				echo "Please indicate which packages to install... [A]ll, [1 - $i]"
+				read -p "(separate multiple choices by a space): " -a SELECTED_PKGS
+				# set $SELECTED_PKGS to 'A' (all) by default (no input)
+				if [ ${#SELECTED_PKGS[@]} -eq 0 ]; then SELECTED_PKGS=('A'); fi
+
 		fi
-done
+}
+
+function install_pkgs {
+		if [[ ${SELECTED_PKGS[@]} == 'A' ]]; then
+				echo "You have selected to install all packages"
+				pacman --print -S "${NEEDED_PKGS[@]}"
+		else
+				for i in ${SELECTED_PKGS[@]}; do
+						i=$(($i-1))
+						echo "${NEEDED_PKGS[$i]}"
+				done
+		fi
+}
+
+
+#check_root
+check_pkgs
+select_pkgs
+install_pkgs
