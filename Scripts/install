@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Read pkgs file into PKGS array
-readarray -t PKGS < ./pkgs
+
+WORK_DIR="/tmp/dotfiles"
 # declare an empty array to be populated later
 declare -a NEEDED_PKGS=()
 declare -a SELECTED_PKGS=()
@@ -16,10 +16,34 @@ function check_root {
 fi
 }
 
+function check_dir {
+		if ! [ -d "$WORK_DIR" ]; then
+				echo "$WORK_DIR does not exist!"
+				echo "Creating ${WORK_DIR}..."
+				mkdir "$WORK_DIR"
+		elif ! [ -z "$(ls -A $WORK_DIR)" ]; then
+				echo "$WORK_DIR is not empty!"
+				echo "Emptying ${WORK_DIR}..."
+				rm -rf "${WORK_DIR}/*"
+		else
+				echo "$WORK_DIR exists and is empty"
+				return
+		fi
+		check_dir
+}
+
+function get_pkg_list {
+		PKG_LIST_URL="https://raw.githubusercontent.com/xanderboy2001/dotfiles/main/Scripts/pkgs"
+		curl "$PKG_LIST_URL" -o "${WORK_DIR}/pkg_list"
+		PKG_LIST_FILE="${WORK_DIR}/pkg_list"
+		# Read pkgs file into PKGS array
+		readarray -t PKG_LIST < "$PKG_LIST_FILE"
+}
+
 function check_pkgs {
 		echo "Checking for required packages..."
 		# Iterates over packages in PKGS
-		for pkg in "${PKGS[@]}"; do
+		for pkg in "${PKG_LIST[@]}"; do
 				# Checks if pkg is installed, piping stdout and stderr to /dev/null
 				if ! pacman -Q $pkg &> /dev/null; then
 						# Adds packages not installed to NEEDED_PKGS
@@ -40,7 +64,7 @@ function select_pkgs {
 				done
 				# Read list of nums from stdin. Corresponds to index of pkg to install
 				echo "Please indicate which packages to install... [A]ll, [1 - $i]"
-				read -p "(separate multiple choices by a space): " -a SELECTED_PKGS
+				read -p "(separate multiple choices by a space) Default: [A]ll" -a SELECTED_PKGS
 				# set $SELECTED_PKGS to 'A' (all) by default (no input)
 				if [ ${#SELECTED_PKGS[@]} -eq 0 ]; then SELECTED_PKGS=('A'); fi
 
@@ -50,7 +74,7 @@ function select_pkgs {
 function install_pkgs {
 		if [[ ${SELECTED_PKGS[@]} == 'A' ]]; then
 				echo "You have selected to install all packages"
-				pacman --print -S "${NEEDED_PKGS[@]}"
+				sudo pacman -S "${NEEDED_PKGS[@]}"
 		else
 				for i in ${SELECTED_PKGS[@]}; do
 						i=$(($i-1))
@@ -59,8 +83,45 @@ function install_pkgs {
 		fi
 }
 
+function check_paru {
+		if [ -f "/bin/paru" ]; then
+				echo "Paru is already installed. Skipping..."
+				return
+		elif [ -f "/bin/yay" ]; then
+				read -p "Paru is not installed, but Yay is. Remove Yay and install Paru? (Y/n) " CONFIRM
+				if [[ "$CONFIRM" = 'n' || "$CONFIRM" = 'N' ]]; then
+						echo "You have chosen to keep yay and skip the installation of paru"
+				elif [[ -z $CONFIRM || "$CONFIRM" = 'y' || "$CONFIRM" = 'Y' ]]; then
+						read -p "This will uninstall yay and replace it with paru. Are you sure? (Y/n) " CONFIRM
+						if [[ "$CONFIRM" = 'n' || "$CONFIRM" = 'N' ]]; then
+								check_paru
+						elif [[ -z "$CONFIRM" || "$CONFIRM" = 'y' || "$CONFIRM" = 'Y' ]]; then
+								remove_yay
+								install_paru
+						fi
+				fi
+		fi
+}
 
-#check_root
+function remove_yay {
+		echo "Removing yay..."
+		sudo pacman -Rns yay
+		echo "Yay has been removed"
+}
+
+function install_paru {
+		echo "Installing paru..."
+		echo "Installing dependencies (base-devel)..."
+		sudo pacman -S --needed base-devel
+		git clone "https://aur.archlinux.org/paru.git" "${WORK_DIR}/paru"
+		cd "${WORK_DIR}/paru"
+		makepkg -si
+}
+
+
+check_dir
+get_pkg_list
 check_pkgs
 select_pkgs
 install_pkgs
+check_paru
