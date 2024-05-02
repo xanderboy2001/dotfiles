@@ -7,29 +7,35 @@ WORK_DIR="/tmp/dotfiles"
 declare -a NEEDED_PKGS=()
 declare -a SELECTED_PKGS=()
 
-function check_root {
-		# Checks if script is run as root, quits if not
-		if [ $(id -u) -ne 0 ]; then
-				echo
-				echo "ERROR: Scrpt must be run as root!"
-				exit
-fi
-}
-
 function check_dir {
 		if ! [ -d "$WORK_DIR" ]; then
 				echo "$WORK_DIR does not exist!"
 				echo "Creating ${WORK_DIR}..."
 				mkdir "$WORK_DIR"
-		elif ! [ -z "$(ls -A $WORK_DIR)" ]; then
-				echo "$WORK_DIR is not empty!"
+				check_dir
+		elif ! [ -z "$(ls -A ${WORK_DIR})" ]; then
+				echo "${WORK_DIR} is not empty!"
 				echo "Emptying ${WORK_DIR}..."
-				rm -rf "${WORK_DIR}/*"
+				echo "rm -rf "${WORK_DIR}/*""
+				rm -rf ${WORK_DIR}/*
+				check_dir
 		else
 				echo "$WORK_DIR exists and is empty"
-				return
 		fi
-		check_dir
+}
+
+function check_pkg() {
+		echo $1
+		if pacman -Q $1 &> /dev/null; then
+				return 0
+		else
+				return 1
+		fi
+}
+
+function check_deps {
+		echo "Checking for script dependencies..."
+
 }
 
 function get_pkg_list {
@@ -63,18 +69,20 @@ function select_pkgs {
 						i=$(($i+1))
 				done
 				# Read list of nums from stdin. Corresponds to index of pkg to install
-				echo "Please indicate which packages to install... [A]ll, [1 - $i]"
-				read -p "(separate multiple choices by a space) Default: [A]ll" -a SELECTED_PKGS
+				echo "Please indicate which packages to install... [A]ll, [N]one, [1 - $i]"
+				read -p "(separate multiple choices by a space) Default: [A]ll " -a SELECTED_PKGS
 				# set $SELECTED_PKGS to 'A' (all) by default (no input)
 				if [ ${#SELECTED_PKGS[@]} -eq 0 ]; then SELECTED_PKGS=('A'); fi
-
 		fi
 }
 
 function install_pkgs {
-		if [[ ${SELECTED_PKGS[@]} == 'A' ]]; then
+		if [[ ${SELECTED_PKGS[@]} == 'A' || ${SELECTED_PKGS[@]} == 'a' ]]; then
 				echo "You have selected to install all packages"
 				sudo pacman -S "${NEEDED_PKGS[@]}"
+		elif [[ ${SELECTED_PKGS[@]} == 'N' || ${SELECTED_PKGS[@]} == 'n' ]]; then
+				echo "You have selected NOT to install any packages"
+				return
 		else
 				for i in ${SELECTED_PKGS[@]}; do
 						i=$(($i-1))
@@ -111,17 +119,23 @@ function remove_yay {
 
 function install_paru {
 		echo "Installing paru..."
-		echo "Installing dependencies (base-devel)..."
-		sudo pacman -S --needed base-devel
+		echo "Checking for dependencies..."
+		if pacman -Q base-devel &> /dev/null; then
+				echo "base-devel is not installed. Installing now..."
+				sudo pacman -S --needed base-devel
+		else
+				echo "Dependency check succeeded"
+		fi
 		git clone "https://aur.archlinux.org/paru.git" "${WORK_DIR}/paru"
 		cd "${WORK_DIR}/paru"
 		makepkg -si
 }
 
 
-check_dir
-get_pkg_list
-check_pkgs
-select_pkgs
-install_pkgs
-check_paru
+#check_dir
+#check_paru
+#get_pkg_list
+#check_pkgs
+#select_pkgs
+#install_pkgs
+if 
