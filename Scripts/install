@@ -7,13 +7,24 @@ WORK_DIR="/tmp/dotfiles"
 declare -a NEEDED_PKGS=()
 declare -a SELECTED_PKGS=()
 
+function confirm_yn {
+		local choice="${1:-y}"
+		echo $choice
+		case $choice in
+				[yY]*)
+						return 0 ;;
+				[nN]*)
+						return 1 ;;
+		esac
+}
+
 function check_dir {
-		if ! [ -d "$WORK_DIR" ]; then
+		if ! [[ -d "$WORK_DIR" ]]; then
 				echo "$WORK_DIR does not exist!"
 				echo "Creating ${WORK_DIR}..."
 				mkdir "$WORK_DIR"
 				check_dir
-		elif ! [ -z "$(ls -A ${WORK_DIR})" ]; then
+		elif ! [[ -z "$(ls -A ${WORK_DIR})" ]]; then
 				echo "${WORK_DIR} is not empty!"
 				echo "Emptying ${WORK_DIR}..."
 				echo "rm -rf "${WORK_DIR}/*""
@@ -24,18 +35,25 @@ function check_dir {
 		fi
 }
 
-function check_pkg() {
-		echo $1
-		if pacman -Q $1 &> /dev/null; then
+function check_pkg {
+		local pkg=$1
+		echo "Checking if ${pkg} is installed..."
+		if pacman -Q $pkg &> /dev/null; then
+				echo "${pkg} is installed!"
 				return 0
 		else
 				return 1
+				echo "${pkg} is not installed!"
 		fi
 }
 
 function check_deps {
 		echo "Checking for script dependencies..."
-
+		echo "Downloading dependency list..."
+		DEP_LIST_URL="https://raw.githubusercontent.com/xanderboy2001/dotfiles/main/Scripts/deps"
+		curl "$DEP_LIST_URL" -o "${WORK_DIR}/dep_list"
+		DEP_LIST_FILE="${WORK_DIR}/dep_list"
+		readarray -t DEP_LIST < "$DEP_LIST_FILE"
 }
 
 function get_pkg_list {
@@ -46,12 +64,12 @@ function get_pkg_list {
 		readarray -t PKG_LIST < "$PKG_LIST_FILE"
 }
 
-function check_pkgs {
+function check_pkg_list {
 		echo "Checking for required packages..."
 		# Iterates over packages in PKGS
 		for pkg in "${PKG_LIST[@]}"; do
-				# Checks if pkg is installed, piping stdout and stderr to /dev/null
-				if ! pacman -Q $pkg &> /dev/null; then
+				# Checks if pkg is installed
+				if !(check_pkg $pkg); then
 						# Adds packages not installed to NEEDED_PKGS
 						NEEDED_PKGS+=($pkg)
 				fi
@@ -65,12 +83,15 @@ function select_pkgs {
 				# Iterate over NEEDED_PKGS and print index variable
 				i=1
 				for pkg in "${NEEDED_PKGS[@]}"; do
-						echo -e "$pkg\t[$i]"
+						echo -e "$pkg [$i]"
 						i=$(($i+1))
-				done
+				done | column -t
 				# Read list of nums from stdin. Corresponds to index of pkg to install
-				echo "Please indicate which packages to install... [A]ll, [N]one, [1 - $i]"
+				echo "Please indicate which packages to install... [A]ll, [N]one, [1 - ${#NEEDED_PKGS[@]}]"
 				read -p "(separate multiple choices by a space) Default: [A]ll " -a SELECTED_PKGS
+				for i in ${!SELECTED_PKGS[@]}; do
+						SELECTED_PKGS[$i]=${NEEDED_PKGS[$((${SELECTED_PKGS[$i]}))-1]}
+				done
 				# set $SELECTED_PKGS to 'A' (all) by default (no input)
 				if [ ${#SELECTED_PKGS[@]} -eq 0 ]; then SELECTED_PKGS=('A'); fi
 		fi
@@ -82,12 +103,16 @@ function install_pkgs {
 				sudo pacman -S "${NEEDED_PKGS[@]}"
 		elif [[ ${SELECTED_PKGS[@]} == 'N' || ${SELECTED_PKGS[@]} == 'n' ]]; then
 				echo "You have selected NOT to install any packages"
-				return
 		else
-				for i in ${SELECTED_PKGS[@]}; do
-						i=$(($i-1))
-						echo "${NEEDED_PKGS[$i]}"
-				done
+				echo "We will install the following packages: ${SELECTED_PKGS[@]}"
+				read -p "Confirm (Y/n): " CONFIRM
+				if ( confirm_yn $CONFIRM ); then
+						sudo pacman -S "${SELECTED_PKGS[@]}"
+				else
+						echo "You have chosen NOT to install any packages"
+						echo "Exiting..."
+						exit
+				fi
 		fi
 }
 
@@ -97,16 +122,28 @@ function check_paru {
 				return
 		elif [ -f "/bin/yay" ]; then
 				read -p "Paru is not installed, but Yay is. Remove Yay and install Paru? (Y/n) " CONFIRM
-				if [[ "$CONFIRM" = 'n' || "$CONFIRM" = 'N' ]]; then
+				if !(confirm_yn $CONFIRM); then
 						echo "You have chosen to keep yay and skip the installation of paru"
-				elif [[ -z $CONFIRM || "$CONFIRM" = 'y' || "$CONFIRM" = 'Y' ]]; then
+						return
+				elif ( confirm_yn $CONFIRM); then
 						read -p "This will uninstall yay and replace it with paru. Are you sure? (Y/n) " CONFIRM
-						if [[ "$CONFIRM" = 'n' || "$CONFIRM" = 'N' ]]; then
-								check_paru
-						elif [[ -z "$CONFIRM" || "$CONFIRM" = 'y' || "$CONFIRM" = 'Y' ]]; then
+						if ( confirm_yn $CONFIRM); then
 								remove_yay
 								install_paru
+						else
+								echo "Inconsistent answers. Redoing Paru/Yay check..."
+								check_paru
 						fi
+				fi
+		else
+				echo "Paru is not installed."
+				read -p "Would you like to install paru? (NOTE: you will NOT be able to continue if you say no) (Y/n): " CONFIRM
+				if ( confirm_yn $CONFIRM ); then
+						install_paru
+				else
+						echo "Paru is the reccomended AUR wrapper. If you really don't want it, install yay and re-run this script."
+						echo "The AUR and a wrapper are a hard requirement for this config. You will not be able to continue without it."
+						exit
 				fi
 		fi
 }
@@ -120,22 +157,30 @@ function remove_yay {
 function install_paru {
 		echo "Installing paru..."
 		echo "Checking for dependencies..."
-		if pacman -Q base-devel &> /dev/null; then
-				echo "base-devel is not installed. Installing now..."
+		if !(check_pkg base-devel); then
+				echo "Installing base-devel..."
 				sudo pacman -S --needed base-devel
-		else
-				echo "Dependency check succeeded"
 		fi
+		if !(check_pkg git); then
+				echo "Installing git..."
+				sudo pacman -S git
+		fi
+		echo "Paru dependency check has succeeded"
 		git clone "https://aur.archlinux.org/paru.git" "${WORK_DIR}/paru"
 		cd "${WORK_DIR}/paru"
 		makepkg -si
 }
 
 
-#check_dir
-#check_paru
-#get_pkg_list
-#check_pkgs
-#select_pkgs
-#install_pkgs
-if 
+#check_deps
+check_dir
+echo
+check_paru
+echo
+get_pkg_list
+echo
+check_pkg_list
+echo
+select_pkgs
+echo
+install_pkgs
