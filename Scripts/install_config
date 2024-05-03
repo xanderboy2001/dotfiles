@@ -18,6 +18,14 @@ function confirm_yn {
 		esac
 }
 
+function config_pacman {
+		if ! [[ -f /etc/pacman.conf ]]; then
+				echo "ERROR! /etc/pacman.conf does not exist! Pacman was not installed correctly!"
+				exit
+		fi
+
+}
+
 function check_dir {
 		if ! [[ -d "$WORK_DIR" ]]; then
 				echo "$WORK_DIR does not exist!"
@@ -103,6 +111,8 @@ function install_pkgs {
 				sudo pacman -S "${NEEDED_PKGS[@]}"
 		elif [[ ${SELECTED_PKGS[@]} == 'N' || ${SELECTED_PKGS[@]} == 'n' ]]; then
 				echo "You have selected NOT to install any packages"
+				echo "Exiting..."
+				exit
 		else
 				echo "We will install the following packages: ${SELECTED_PKGS[@]}"
 				read -p "Confirm (Y/n): " CONFIRM
@@ -182,5 +192,7 @@ echo
 check_pkg_list
 echo
 select_pkgs
+echo
+enable_multilib
 echo
 install_pkgs
