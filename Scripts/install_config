@@ -3,13 +3,13 @@ set -euo pipefail
 
 
 WORK_DIR="/tmp/dotfiles"
+PACMAN_CONF="/etc/pacman.conf"
 # declare an empty array to be populated later
 declare -a NEEDED_PKGS=()
 declare -a SELECTED_PKGS=()
 
 function confirm_yn {
 		local choice="${1:-y}"
-		echo $choice
 		case $choice in
 				[yY]*)
 						return 0 ;;
@@ -19,11 +19,73 @@ function confirm_yn {
 }
 
 function config_pacman {
-		if ! [[ -f /etc/pacman.conf ]]; then
-				echo "ERROR! /etc/pacman.conf does not exist! Pacman was not installed correctly!"
+		if ! [[ -f $PACMAN_CONF ]]; then
+				echo "ERROR! ${PACMAN_CONF} does not exist! Pacman was not installed correctly!"
+				exit
+		else
+				cp $PACMAN_CONF "${WORK_DIR}/pacman.conf.tmp"
+				PACMAN_CONF="${WORK_DIR}/pacman.conf.tmp"
+		fi
+		echo "Checking if the multilib repository is enabled..."
+		local arr=()
+		mapfile -t arr < <(grep -A1 "\[multilib\]" $PACMAN_CONF)
+		if [[ ${#arr[@]} -ne 2 ]]; then
+				echo "ERROR. The string '[multilib]' was not found in your pacman configuration file (it should be!)"
+				echo "This could mean pacman was not installed correctly."
 				exit
 		fi
+		
+		if [[ ${arr[0]} == \#* && ${arr[1]} == \#* ]]; then
+				echo "Multilib is not enabled. Would you like to enable it?"
+				echo "Multilib is required for many programs (like Steam)"
+				read -p "Install multilib? (Y/n) " CONFIRM
+				if ( confirm_yn $CONFIRM ); then
+						echo "Enabling the multilib repository..."
+						sed -i "/\[multilib\]/,/Include/"'s/^#//' $PACMAN_CONF
+				else
+						echo "We cannot continue as Multilib is required for many programs"
+						exit
+				fi
+		else
+				echo "Multilib is already enabled"
+		fi
 
+		if ( grep -xq "^#Color" $PACMAN_CONF ); then
+				read -p "Color output is not enabled in pacman. Would you like to enable it? (Y/n) " CONFIRM
+				if ( confirm_yn $CONFIRM ); then
+						echo "Enabling color output in pacman..."
+						sed -i 's/^#Color/Color/' $PACMAN_CONF
+				else
+						echo "You have selected NOT to enable color output in pacman"
+				fi
+		elif ( grep -xq "^Color" $PACMAN_CONF ); then
+				echo "Color output is already enabled in pacman"
+		else
+				echo "ERROR: the 'Color' option is not present in /etc/pacman.conf!"
+				echo "This could mean that your pacman.conf is not formatted correctlly, and/or pacman is not installed properly!"
+				read -p "Would you like to continue (we will NOT be enabling color output with this script)" CONFIRM
+				if !( confirm_yn $CONFIRM ); then
+						exit
+				fi
+		fi
+
+		if ( grep -q "^#ParallelDownloads" $PACMAN_CONF ); then
+				read -p "Would you like to enable parallel downloads in pacman? (Y/n) " CONFIRM
+				if ( confirm_yn $CONFIRM ); then
+						read -p "How many downloads would you like to run in parallel? (Default: 5) " PARALLEL_DL_COUNT
+						if [[ -z $PARALLEL_DL_COUNT ]]; then
+								PARALLEL_DL_COUNT=5
+						fi
+						sed -i "s/^#ParallelDownloads.*/ParallelDownloads = ${PARALLEL_DL_COUNT}/" $PACMAN_CONF
+				fi
+		fi
+		echo "Installing our edited pacman.conf file..."
+		sudo cp $PACMAN_CONF /etc/pacman.conf
+}
+
+function upgrade_system {
+		echo "Updating the system packages and databases..."
+		sudo pacman -Syyu
 }
 
 function check_dir {
@@ -35,7 +97,6 @@ function check_dir {
 		elif ! [[ -z "$(ls -A ${WORK_DIR})" ]]; then
 				echo "${WORK_DIR} is not empty!"
 				echo "Emptying ${WORK_DIR}..."
-				echo "rm -rf "${WORK_DIR}/*""
 				rm -rf ${WORK_DIR}/*
 				check_dir
 		else
@@ -185,6 +246,10 @@ function install_paru {
 #check_deps
 check_dir
 echo
+config_pacman
+echo
+upgrade_system
+echo
 check_paru
 echo
 get_pkg_list
@@ -192,7 +257,5 @@ echo
 check_pkg_list
 echo
 select_pkgs
-echo
-enable_multilib
 echo
 install_pkgs

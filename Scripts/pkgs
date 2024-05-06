@@ -21,7 +21,6 @@ pipewire-alsa
 pipewire-pulse
 pulseaudio
 qtile
-qtile-extras
 ranger
 redshift
 ripgrep
