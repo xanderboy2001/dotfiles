@@ -3,7 +3,7 @@ set -euo pipefail
 
 #autorandr -c
 #sleep 0.5
-#dunst &
+dunst &
 notify-send Qtile "Dunst Started. Performing startup tasks"
 #sh /home/alex/.config/polybar/launch.sh &
 
