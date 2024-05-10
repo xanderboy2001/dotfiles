@@ -1,12 +1,14 @@
 alacritty
 qtile-extra
-
+nvidia
 aria2
 bc
 code
 colordiff
 conky
 eza
+dkms
+linux-headers
 fd
 feh
 firefox

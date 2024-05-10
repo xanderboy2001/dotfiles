@@ -247,7 +247,6 @@ function install_configs {
 		rsync -a ${CONF_DIR}/* ${HOME}/.config/
 }
 
-
 check_dir
 echo
 config_pacman
