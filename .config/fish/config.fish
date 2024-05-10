@@ -46,3 +46,6 @@ end
 
 ### SETTING THE STARSHIP PROMPT ###
 starship init fish | source
+
+### Initializing zoxide ###
+zoxide init fish
