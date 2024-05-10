@@ -3,6 +3,7 @@ set -euo pipefail
 
 
 WORK_DIR="/tmp/dotfiles"
+CONF_DIR="$(dirname "$0")/.config"
 PACMAN_CONF="/etc/pacman.conf"
 # declare an empty array to be populated later
 declare -a NEEDED_PKGS=()
@@ -169,7 +170,7 @@ function select_pkgs {
 function install_pkgs {
 		if [[ ${SELECTED_PKGS[@]} == 'A' || ${SELECTED_PKGS[@]} == 'a' ]]; then
 				echo "You have selected to install all packages"
-				sudo pacman -S "${NEEDED_PKGS[@]}"
+				sudo paru -S "${NEEDED_PKGS[@]}"
 		elif [[ ${SELECTED_PKGS[@]} == 'N' || ${SELECTED_PKGS[@]} == 'n' ]]; then
 				echo "You have selected NOT to install any packages"
 				echo "Exiting..."
@@ -178,7 +179,7 @@ function install_pkgs {
 				echo "We will install the following packages: ${SELECTED_PKGS[@]}"
 				read -p "Confirm (Y/n): " CONFIRM
 				if ( confirm_yn $CONFIRM ); then
-						sudo pacman -S "${SELECTED_PKGS[@]}"
+						sudo paru -S "${SELECTED_PKGS[@]}"
 				else
 						echo "You have chosen NOT to install any packages"
 						echo "Exiting..."
@@ -242,8 +243,11 @@ function install_paru {
 		makepkg -si
 }
 
+functon install_configs {
+		rsync -a ${CONF_DIR}/* ${HOME}/.config/
+}
 
-#check_deps
+
 check_dir
 echo
 config_pacman
@@ -259,4 +263,5 @@ echo
 select_pkgs
 echo
 install_pkgs
-rsync ./.config/ ~/.config/
+echo
+install_configs
