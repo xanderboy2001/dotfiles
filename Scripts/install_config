@@ -243,7 +243,7 @@ function install_paru {
 		makepkg -si
 }
 
-functon install_configs {
+function install_configs {
 		rsync -a ${CONF_DIR}/* ${HOME}/.config/
 }
 
