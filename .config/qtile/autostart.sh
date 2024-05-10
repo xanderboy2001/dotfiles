@@ -14,5 +14,8 @@ xautolock -time 30 -locker 'systemctl suspend' -notify 30 -notifier dunstify &
 # Set Wallpaper
 /home/alex/.fehbg &
 
+# Load ~/.nvidia-settings-rc
+nvidia-settings --load-config-only
+
 # Autostart apps
 bash "/home/alex/.config/qtile/AppStart.sh" &

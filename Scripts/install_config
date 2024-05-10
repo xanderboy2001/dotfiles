@@ -243,6 +243,15 @@ function install_paru {
 		makepkg -si
 }
 
+function install_nvidia {
+		echo "Creating Xorg config file for nvidia"
+		nvidia-xconfig
+		echo "Removing kms hook from mkinitcpio.conf (Needed to blacklist nouveau driver"
+		sed -ie 's/^HOOKS=(.*kms.*)/HOOKS=(base udev autodetect microcode modconf keyboard keymap consolefont block filesystems fsck)/' /etc/mkinitcpio.conf
+		echo
+		echo "YOU WILL NEED TO REBOOT YOUR MACHINE TO USE THE NEW DRIVER"
+}
+
 function install_configs {
 		rsync -a ${CONF_DIR}/* ${HOME}/.config/
 }

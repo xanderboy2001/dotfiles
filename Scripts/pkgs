@@ -1,6 +1,7 @@
 alacritty
 qtile-extra
-nvidia
+nvidia-dkms
+lib32-nvidia-utils
 aria2
 bc
 code
