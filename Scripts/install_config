@@ -259,3 +259,4 @@ echo
 select_pkgs
 echo
 install_pkgs
+rsync ./.config/ ~/.config/
