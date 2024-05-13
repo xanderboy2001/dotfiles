@@ -254,10 +254,11 @@ function config_bees {
     DISK_NAME=$(lsblk -f lsblk -fr | awk '$2=="btrfs"{print $1}')
     UUID=$(lsblk -f /dev/sda2 | awk 'NR==2{print $3}')
     echo
-    lsblk 
+    lsblk -fo NAME,FSTYPE,UUID,MOUNTPOINTS
     echo
     read -rp "Please review the output of lsblk and confirm that ${DISK_NAME} is the root btrfs partition and ${UUID} is the correct UUID (Y/n): "
-    
+    echo -e "UUID=${UUID}\nDB_SIZE=$((256*1024*1024))" | sudo tee /etc/bees/root.config > /dev/null
+    sudo systemctl enable --now "beesd@${UUID}.service"
 }
 
 function install_configs {
