@@ -252,6 +252,13 @@ function install_nvidia {
 		echo "YOU WILL NEED TO REBOOT YOUR MACHINE TO USE THE NEW DRIVER"
 }
 
+function add_bri_acct {
+	echo "Adding a user account for Bri..."
+	sudo useradd -m -U -s /bin/bash bri
+	echo 'bri' | sudo passwd -s bri
+	echo "Added user account for bri and set password to 'bri'"
+}
+
 function install_configs {
 		rsync -a ${CONF_DIR}/* ${HOME}/.config/
 }
