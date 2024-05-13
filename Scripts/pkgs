@@ -1,3 +1,4 @@
+# shellcheck disable=SC2148
 1password
 1password-cli
 alacritty
@@ -68,9 +69,7 @@ rofi-1pass
 rofi-calc
 rsync
 sleep-inhibitor
-snap-pac
 snap-pac-grub
-snapper
 starship
 steam
 tgpt
