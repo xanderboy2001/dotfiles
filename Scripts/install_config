@@ -86,7 +86,7 @@ function config_pacman {
 
 function upgrade_system {
     echo "Updating the system packages and databases..."
-    sudo pacman -Syyu
+    sudo pacman -Syyu --noconfirm
 }
 
 function check_dir {
@@ -161,7 +161,7 @@ function select_pkgs {
 function install_pkgs {
     if [[ ${SELECTED_PKGS[*]} == 'A' || ${SELECTED_PKGS[*]} == 'a' ]]; then
         echo "You have selected to install all packages"
-        sudo paru -S "${NEEDED_PKGS[@]}"
+        paru -S --noconfirm "${NEEDED_PKGS[@]}"
     elif [[ ${SELECTED_PKGS[*]} == 'N' || ${SELECTED_PKGS[*]} == 'n' ]]; then
         echo "You have selected NOT to install any packages"
         echo "Exiting..."
@@ -170,7 +170,7 @@ function install_pkgs {
         echo "We will install the following packages: ${SELECTED_PKGS[*]}"
         read -rp "Confirm (Y/n): " CONFIRM
         if ( confirm_yn "$CONFIRM" ); then
-            sudo paru -S "${SELECTED_PKGS[@]}"
+            paru -S --noconfirm "${SELECTED_PKGS[@]}"
         else
             echo "You have chosen NOT to install any packages"
             echo "Exiting..."
@@ -213,7 +213,7 @@ function check_paru {
 
 function remove_yay {
     echo "Removing yay..."
-    sudo pacman -Rns yay
+    sudo pacman --noconfirm -Rns yay
     echo "Yay has been removed"
 }
 
@@ -222,11 +222,11 @@ function install_paru {
     echo "Checking for dependencies..."
     if ! (check_pkg base-devel); then
         echo "Installing base-devel..."
-        sudo pacman -S --needed base-devel
+        sudo pacman -S --needed --noconfirm base-devel
     fi
     if ! (check_pkg git); then
         echo "Installing git..."
-        sudo pacman -S git
+        sudo pacman -S --noconfirm git
     fi
     echo "Paru dependency check has succeeded"
     git clone "https://aur.archlinux.org/paru.git" "${WORK_DIR}/paru"
