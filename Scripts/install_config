@@ -39,8 +39,8 @@ function config_pacman {
 		if [[ ${arr[0]} == \#* && ${arr[1]} == \#* ]]; then
 				echo "Multilib is not enabled. Would you like to enable it?"
 				echo "Multilib is required for many programs (like Steam)"
-				read -p "Install multilib? (Y/n) " CONFIRM
-				if ( confirm_yn $CONFIRM ); then
+				read -rp "Install multilib? (Y/n) " CONFIRM
+				if ( confirm_yn "$CONFIRM" ); then
 						echo "Enabling the multilib repository..."
 						sed -i "/\[multilib\]/,/Include/"'s/^#//' $PACMAN_CONF
 				else
@@ -52,8 +52,8 @@ function config_pacman {
 		fi
 
 		if ( grep -xq "^#Color" $PACMAN_CONF ); then
-				read -p "Color output is not enabled in pacman. Would you like to enable it? (Y/n) " CONFIRM
-				if ( confirm_yn $CONFIRM ); then
+				read -rp "Color output is not enabled in pacman. Would you like to enable it? (Y/n) " CONFIRM
+				if ( confirm_yn "$CONFIRM" ); then
 						echo "Enabling color output in pacman..."
 						sed -i 's/^#Color/Color/' $PACMAN_CONF
 				else
@@ -64,16 +64,16 @@ function config_pacman {
 		else
 				echo "ERROR: the 'Color' option is not present in /etc/pacman.conf!"
 				echo "This could mean that your pacman.conf is not formatted correctlly, and/or pacman is not installed properly!"
-				read -p "Would you like to continue (we will NOT be enabling color output with this script)" CONFIRM
-				if !( confirm_yn $CONFIRM ); then
+				read -rp "Would you like to continue (we will NOT be enabling color output with this script)" CONFIRM
+				if ! ( confirm_yn "$CONFIRM" ); then
 						exit
 				fi
 		fi
 
 		if ( grep -q "^#ParallelDownloads" $PACMAN_CONF ); then
-				read -p "Would you like to enable parallel downloads in pacman? (Y/n) " CONFIRM
-				if ( confirm_yn $CONFIRM ); then
-						read -p "How many downloads would you like to run in parallel? (Default: 5) " PARALLEL_DL_COUNT
+				read -rp "Would you like to enable parallel downloads in pacman? (Y/n) " CONFIRM
+				if ( confirm_yn "$CONFIRM" ); then
+						read -rp "How many downloads would you like to run in parallel? (Default: 5) " PARALLEL_DL_COUNT
 						if [[ -z $PARALLEL_DL_COUNT ]]; then
 								PARALLEL_DL_COUNT=5
 						fi
@@ -98,7 +98,7 @@ function check_dir {
 		elif ! [[ -z "$(ls -A ${WORK_DIR})" ]]; then
 				echo "${WORK_DIR} is not empty!"
 				echo "Emptying ${WORK_DIR}..."
-				rm -rf ${WORK_DIR}/*
+				rm -rf ${WORK_DIR:?}/*
 				check_dir
 		else
 				echo "$WORK_DIR exists and is empty"
@@ -108,22 +108,13 @@ function check_dir {
 function check_pkg {
 		local pkg=$1
 		echo "Checking if ${pkg} is installed..."
-		if pacman -Q $pkg &> /dev/null; then
+		if pacman -Q "$pkg" &> /dev/null; then
 				echo "${pkg} is installed!"
 				return 0
 		else
-				return 1
 				echo "${pkg} is not installed!"
+				return 1
 		fi
-}
-
-function check_deps {
-		echo "Checking for script dependencies..."
-		echo "Downloading dependency list..."
-		DEP_LIST_URL="https://raw.githubusercontent.com/xanderboy2001/dotfiles/main/Scripts/deps"
-		curl "$DEP_LIST_URL" -o "${WORK_DIR}/dep_list"
-		DEP_LIST_FILE="${WORK_DIR}/dep_list"
-		readarray -t DEP_LIST < "$DEP_LIST_FILE"
 }
 
 function get_pkg_list {
@@ -139,28 +130,28 @@ function check_pkg_list {
 		# Iterates over packages in PKGS
 		for pkg in "${PKG_LIST[@]}"; do
 				# Checks if pkg is installed
-				if !(check_pkg $pkg); then
+				if ! (check_pkg "$pkg"); then
 						# Adds packages not installed to NEEDED_PKGS
-						NEEDED_PKGS+=($pkg)
+						NEEDED_PKGS+=("$pkg")
 				fi
 		done
 }
 
 function select_pkgs {
 		# if NEEDED_PKGS isn't empty
-		if ! [ -z $NEEDED_PKGS ]; then
+		if [ -n "${NEEDED_PKGS[*]}" ]; then
 				echo "The following packages are are not currently installed:"
 				# Iterate over NEEDED_PKGS and print index variable
 				i=1
 				for pkg in "${NEEDED_PKGS[@]}"; do
 						echo -e "$pkg [$i]"
-						i=$(($i+1))
+						i=$((i+1))
 				done | column -t
 				# Read list of nums from stdin. Corresponds to index of pkg to install
 				echo "Please indicate which packages to install... [A]ll, [N]one, [1 - ${#NEEDED_PKGS[@]}]"
 				read -p "(separate multiple choices by a space) Default: [A]ll " -a SELECTED_PKGS
-				for i in ${!SELECTED_PKGS[@]}; do
-						SELECTED_PKGS[$i]=${NEEDED_PKGS[$((${SELECTED_PKGS[$i]}))-1]}
+				for i in "${!SELECTED_PKGS[@]}"; do
+						SELECTED_PKGS[i]=${NEEDED_PKGS[$((${SELECTED_PKGS[$i]}))-1]}
 				done
 				# set $SELECTED_PKGS to 'A' (all) by default (no input)
 				if [ ${#SELECTED_PKGS[@]} -eq 0 ]; then SELECTED_PKGS=('A'); fi
@@ -168,17 +159,17 @@ function select_pkgs {
 }
 
 function install_pkgs {
-		if [[ ${SELECTED_PKGS[@]} == 'A' || ${SELECTED_PKGS[@]} == 'a' ]]; then
+		if [[ ${SELECTED_PKGS[*]} == 'A' || ${SELECTED_PKGS[*]} == 'a' ]]; then
 				echo "You have selected to install all packages"
 				sudo paru -S "${NEEDED_PKGS[@]}"
-		elif [[ ${SELECTED_PKGS[@]} == 'N' || ${SELECTED_PKGS[@]} == 'n' ]]; then
+		elif [[ ${SELECTED_PKGS[*]} == 'N' || ${SELECTED_PKGS[*]} == 'n' ]]; then
 				echo "You have selected NOT to install any packages"
 				echo "Exiting..."
 				exit
 		else
-				echo "We will install the following packages: ${SELECTED_PKGS[@]}"
-				read -p "Confirm (Y/n): " CONFIRM
-				if ( confirm_yn $CONFIRM ); then
+				echo "We will install the following packages: ${SELECTED_PKGS[*]}"
+				read -rp "Confirm (Y/n): " CONFIRM
+				if ( confirm_yn "$CONFIRM" ); then
 						sudo paru -S "${SELECTED_PKGS[@]}"
 				else
 						echo "You have chosen NOT to install any packages"
@@ -193,13 +184,13 @@ function check_paru {
 				echo "Paru is already installed. Skipping..."
 				return
 		elif [ -f "/bin/yay" ]; then
-				read -p "Paru is not installed, but Yay is. Remove Yay and install Paru? (Y/n) " CONFIRM
-				if !(confirm_yn $CONFIRM); then
+				read -rp "Paru is not installed, but Yay is. Remove Yay and install Paru? (Y/n) " CONFIRM
+				if ! (confirm_yn "$CONFIRM"); then
 						echo "You have chosen to keep yay and skip the installation of paru"
 						return
-				elif ( confirm_yn $CONFIRM); then
-						read -p "This will uninstall yay and replace it with paru. Are you sure? (Y/n) " CONFIRM
-						if ( confirm_yn $CONFIRM); then
+				elif ( confirm_yn "$CONFIRM"); then
+						read -rp "This will uninstall yay and replace it with paru. Are you sure? (Y/n) " CONFIRM
+						if ( confirm_yn "$CONFIRM"); then
 								remove_yay
 								install_paru
 						else
@@ -209,8 +200,8 @@ function check_paru {
 				fi
 		else
 				echo "Paru is not installed."
-				read -p "Would you like to install paru? (NOTE: you will NOT be able to continue if you say no) (Y/n): " CONFIRM
-				if ( confirm_yn $CONFIRM ); then
+				read -rp "Would you like to install paru? (NOTE: you will NOT be able to continue if you say no) (Y/n): " CONFIRM
+				if ( confirm_yn "$CONFIRM" ); then
 						install_paru
 				else
 						echo "Paru is the reccomended AUR wrapper. If you really don't want it, install yay and re-run this script."
@@ -229,11 +220,11 @@ function remove_yay {
 function install_paru {
 		echo "Installing paru..."
 		echo "Checking for dependencies..."
-		if !(check_pkg base-devel); then
+		if ! (check_pkg base-devel); then
 				echo "Installing base-devel..."
 				sudo pacman -S --needed base-devel
 		fi
-		if !(check_pkg git); then
+		if ! (check_pkg git); then
 				echo "Installing git..."
 				sudo pacman -S git
 		fi
@@ -265,12 +256,12 @@ function config_bees {
 	echo
 	lsblk 
 	echo
-	read -p "Please review the output of lsblk and confirm that ${DISK_NAME} is the root btrfs partition and ${UUID} is the correct UUID (Y/n): "
+	read -rp "Please review the output of lsblk and confirm that ${DISK_NAME} is the root btrfs partition and ${UUID} is the correct UUID (Y/n): "
 	
 }
 
 function install_configs {
-		rsync -a ${CONF_DIR}/* ${HOME}/.config/
+		rsync -a "${CONF_DIR}"/* "${HOME}"/.config/
 }
 
 check_dir
