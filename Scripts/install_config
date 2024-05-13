@@ -95,7 +95,7 @@ function check_dir {
 				echo "Creating ${WORK_DIR}..."
 				mkdir "$WORK_DIR"
 				check_dir
-		elif ! [[ -z "$(ls -A ${WORK_DIR})" ]]; then
+		elif [[ -n "$(ls -A ${WORK_DIR})" ]]; then
 				echo "${WORK_DIR} is not empty!"
 				echo "Emptying ${WORK_DIR}..."
 				rm -rf ${WORK_DIR:?}/*
@@ -149,7 +149,7 @@ function select_pkgs {
 				done | column -t
 				# Read list of nums from stdin. Corresponds to index of pkg to install
 				echo "Please indicate which packages to install... [A]ll, [N]one, [1 - ${#NEEDED_PKGS[@]}]"
-				read -p "(separate multiple choices by a space) Default: [A]ll " -a SELECTED_PKGS
+				read -rp "(separate multiple choices by a space) Default: [A]ll " -a SELECTED_PKGS
 				for i in "${!SELECTED_PKGS[@]}"; do
 						SELECTED_PKGS[i]=${NEEDED_PKGS[$((${SELECTED_PKGS[$i]}))-1]}
 				done
