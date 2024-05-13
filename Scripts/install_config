@@ -161,7 +161,7 @@ function select_pkgs {
 function install_pkgs {
     if [[ ${SELECTED_PKGS[*]} == 'A' || ${SELECTED_PKGS[*]} == 'a' ]]; then
         echo "You have selected to install all packages"
-        paru -S --needed --noconfirm "${NEEDED_PKGS[@]}"
+        paru -S --needed "${NEEDED_PKGS[@]}"
     elif [[ ${SELECTED_PKGS[*]} == 'N' || ${SELECTED_PKGS[*]} == 'n' ]]; then
         echo "You have selected NOT to install any packages"
         echo "Exiting..."
@@ -170,7 +170,7 @@ function install_pkgs {
         echo "We will install the following packages: ${SELECTED_PKGS[*]}"
         read -rp "Confirm (Y/n): " CONFIRM
         if ( confirm_yn "$CONFIRM" ); then
-            paru -S --needed --noconfirm "${SELECTED_PKGS[@]}"
+            paru -S --needed "${SELECTED_PKGS[@]}"
         else
             echo "You have chosen NOT to install any packages"
             echo "Exiting..."
