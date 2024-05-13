@@ -259,6 +259,16 @@ function add_bri_acct {
 	echo "Added user account for bri and set password to 'bri'"
 }
 
+function config_bees {
+	DISK_NAME=$(lsblk -f lsblk -fr | awk '$2=="btrfs"{print $1}')
+	UUID=$(lsblk -f /dev/sda2 | awk 'NR==2{print $3}')
+	echo
+	lsblk 
+	echo
+	read -p "Please review the output of lsblk and confirm that ${DISK_NAME} is the root btrfs partition and ${UUID} is the correct UUID (Y/n): "
+	
+}
+
 function install_configs {
 		rsync -a ${CONF_DIR}/* ${HOME}/.config/
 }
