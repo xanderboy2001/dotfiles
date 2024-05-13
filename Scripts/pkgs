@@ -10,7 +10,7 @@ bees
 blueman
 bluez
 bluez-utils
-btrfs-progress
+btrfs-progs
 caffeine-ng
 cinnamon
 code
@@ -45,10 +45,10 @@ mangohud
 neovim
 neovim-plug
 networkmanager
-networkmanager
-networkmanager-applet
+network-manager-applet
 nvidia-dkms
-nvidia-settingsp7zip
+nvidia-settings
+p7zip
 pam_usb
 pasystray
 pavucontrol
@@ -60,7 +60,7 @@ polkit
 protontricks
 pulseaudio
 qtile
-qtile-extra
+qtile-extras
 ranger
 redshift
 ripgrep
