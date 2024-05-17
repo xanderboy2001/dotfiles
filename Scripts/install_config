@@ -137,7 +137,7 @@ function get_pkg_list {
 function check_pkg_list {
     NEEDED_PKGS=()
     echo "Checking for required packages..."
-    local -a PKG_LIST=( "$1" )
+    local -a PKG_LIST=( "$@" )
     # Iterates over packages in PKGS
     for pkg in "${PKG_LIST[@]}"; do
         # Checks if pkg is installed
@@ -170,7 +170,9 @@ function select_pkgs {
 }
 
 function install_pkgs {
-    local SELECTED_PKGS=("$1")
+    local -a SELECTED_PKGS=( "$@" )
+    # Quit the function if we have no packages to install
+    if [ ${#SELECTED_PKGS[@]} -eq 0 ]; then return; fi
     if [[ ${SELECTED_PKGS[*]} == 'A' || ${SELECTED_PKGS[*]} == 'a' ]]; then
         echo "You have selected to install all packages"
         paru -S --needed "${NEEDED_PKGS[@]}"
@@ -247,6 +249,8 @@ function install_paru {
 }
 
 function install_nvidia {
+    # Quit the function if we are in a VM
+    if ( facter is_virtual &>/dev/null ); then return; fi
     echo "Creating Xorg config file for nvidia"
     nvidia-xconfig
     echo "Removing kms hook from mkinitcpio.conf (Needed to blacklist nouveau driver"
@@ -256,6 +260,10 @@ function install_nvidia {
 }
 
 function add_bri_acct {
+    # Quit function if user 'bri' already exists
+    if ( id "bri" >/dev/null 2>&1 ); then
+        return
+    fi
     echo "Adding a user account for Bri..."
     sudo useradd -m -U -s /bin/bash bri
     echo 'bri' | sudo passwd -s bri
@@ -263,7 +271,7 @@ function add_bri_acct {
 }
 
 function config_bees {
-    DISK_NAME=$(lsblk -f lsblk -fr | awk '$2=="btrfs"{print $1}')
+    DISK_NAME=$(lsblk -fr | awk '$2=="btrfs"{print $1}')
     UUID=$(lsblk -f /dev/sda2 | awk 'NR==2{print $3}')
     echo
     lsblk -fo NAME,FSTYPE,UUID,MOUNTPOINTS
@@ -288,7 +296,6 @@ function config_git {
 }
 
 function set_shell {
-    sudo add-shell /usr/bin/fish
     chsh -s /usr/bin/fish
 }
 
@@ -300,15 +307,19 @@ upgrade_system
 echo
 check_paru
 echo
+check_deps
+echo
 get_pkg_list
 echo
 check_pkg_list "${PKG_LIST[@]}"
 echo
 select_pkgs
 echo
+# Only run install_pkgs if we have packages to install
 install_pkgs "${SELECTED_PKGS[@]}"
 echo
-if ( ! facter is_virtual ); then install_nvidia; fi
+# Only configure nvidia if we aren't in a VM
+if ( ! facter is_virtual &>/dev/null ); then install_nvidia; fi
 echo
 add_bri_acct
 echo
