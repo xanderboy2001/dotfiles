@@ -286,7 +286,7 @@ check_dir
 echo
 config_pacman
 echo
-#upgrade_system
+upgrade_system
 echo
 check_paru
 echo
