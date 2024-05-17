@@ -3,7 +3,7 @@ set -euo pipefail
 
 
 WORK_DIR="/tmp/dotfiles"
-CONF_DIR="$(dirname "$0")/.config"
+CONF_DIR="$(dirname "$0")/../.config"
 PACMAN_CONF="/etc/pacman.conf"
 # declare an empty array to be populated later
 declare -a NEEDED_PKGS=()
