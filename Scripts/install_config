@@ -9,6 +9,7 @@ PACMAN_CONF="/etc/pacman.conf"
 declare -a NEEDED_PKGS=()
 declare -a SELECTED_PKGS=()
 declare -a PKG_LIST=()
+declare -a DEP_LIST=(git facter)
 
 function confirm_yn {
     local choice="${1:-y}"
@@ -18,6 +19,12 @@ function confirm_yn {
         [nN]*)
             return 1 ;;
     esac
+}
+
+function check_deps {
+    echo "Checking script dependencies"
+    check_pkg_list "${DEP_LIST[@]}"
+    install_pkgs "${NEEDED_PKGS[@]}"
 }
 
 function config_pacman {
@@ -121,14 +128,16 @@ function check_pkg {
 function get_pkg_list {
     #PKG_LIST_URL="https://raw.githubusercontent.com/xanderboy2001/dotfiles/main/Scripts/pkgs"
     #curl "$PKG_LIST_URL" -o "${WORK_DIR}/pkg_list"
-    cp $(dirname "$0")/pkgs "${WORK_DIR}/pkg_list"
+    cp "$(dirname "$0")/pkgs" "${WORK_DIR}/pkg_list"
     PKG_LIST_FILE="${WORK_DIR}/pkg_list"
     # Read pkgs file into PKGS array
     readarray -t PKG_LIST < "$PKG_LIST_FILE"
 }
 
 function check_pkg_list {
+    NEEDED_PKGS=()
     echo "Checking for required packages..."
+    local -a PKG_LIST=( "$1" )
     # Iterates over packages in PKGS
     for pkg in "${PKG_LIST[@]}"; do
         # Checks if pkg is installed
@@ -161,6 +170,7 @@ function select_pkgs {
 }
 
 function install_pkgs {
+    local SELECTED_PKGS=("$1")
     if [[ ${SELECTED_PKGS[*]} == 'A' || ${SELECTED_PKGS[*]} == 'a' ]]; then
         echo "You have selected to install all packages"
         paru -S --needed "${NEEDED_PKGS[@]}"
@@ -292,13 +302,13 @@ check_paru
 echo
 get_pkg_list
 echo
-check_pkg_list
+check_pkg_list "${PKG_LIST[@]}"
 echo
 select_pkgs
 echo
-install_pkgs
+install_pkgs "${SELECTED_PKGS[@]}"
 echo
-install_nvidia
+if ( ! facter is_virtual ); then install_nvidia; fi
 echo
 add_bri_acct
 echo
