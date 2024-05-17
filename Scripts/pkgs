@@ -62,6 +62,8 @@ pavucontrol
 pcmanfm
 pigz
 pipewire
+pipewire-alsa
+pipewire-jack
 pipewire-pulse
 polkit
 protontricks
