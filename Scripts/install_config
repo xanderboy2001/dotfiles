@@ -265,11 +265,26 @@ function install_configs {
     rsync -a "${CONF_DIR}"/* "${HOME}"/.config/
 }
 
+function start_networkManager {
+    sudo systemctl enable --now NetworkManager.service
+}
+
+function config_git {
+    git config --global user.name "Alexader Christian"
+    git config --global user.email "alexanderechristian@gmail.com"
+    git config --global init.defaultBranch master
+}
+
+function set_shell {
+    sudo add-shell /usr/bin/fish
+    chsh -s /usr/bin/fish
+}
+
 check_dir
 echo
 config_pacman
 echo
-upgrade_system
+#upgrade_system
 echo
 check_paru
 echo
@@ -281,4 +296,16 @@ select_pkgs
 echo
 install_pkgs
 echo
+install_nvidia
+echo
+add_bri_acct
+echo
+config_bees
+echo
 install_configs
+echo
+start_networkManager
+echo
+config_git
+echo
+set_shell
