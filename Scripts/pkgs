@@ -39,11 +39,13 @@ incron
 lib32-nvidia-utils
 libreoffice-fresh
 linux-headers
+man-db
+man-pages
 mangohud
 neovim
 neovim-plug
-networkmanager
 network-manager-applet
+networkmanager
 nvidia-dkms
 nvidia-settings
 p7zip
