@@ -8,6 +8,7 @@ PACMAN_CONF="/etc/pacman.conf"
 # declare an empty array to be populated later
 declare -a NEEDED_PKGS=()
 declare -a SELECTED_PKGS=()
+declare -a PKG_LIST=()
 
 function confirm_yn {
     local choice="${1:-y}"
@@ -118,8 +119,9 @@ function check_pkg {
 }
 
 function get_pkg_list {
-    PKG_LIST_URL="https://raw.githubusercontent.com/xanderboy2001/dotfiles/main/Scripts/pkgs"
-    curl "$PKG_LIST_URL" -o "${WORK_DIR}/pkg_list"
+    #PKG_LIST_URL="https://raw.githubusercontent.com/xanderboy2001/dotfiles/main/Scripts/pkgs"
+    #curl "$PKG_LIST_URL" -o "${WORK_DIR}/pkg_list"
+    cp $(dirname "$0")/pkgs "${WORK_DIR}/pkg_list"
     PKG_LIST_FILE="${WORK_DIR}/pkg_list"
     # Read pkgs file into PKGS array
     readarray -t PKG_LIST < "$PKG_LIST_FILE"
