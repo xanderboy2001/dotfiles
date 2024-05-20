@@ -10,6 +10,17 @@ declare -a SELECTED_PKGS=()
 declare -a PKG_LIST=()
 declare -a DEP_LIST=(git facter)
 
+SERVICE_CONTENT="[Unit]
+Description=Restart NetworkManager.service after resuming from sleep.
+After=suspend.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/systemctl restart NetworkManager.service
+
+[Install]
+WantedBy=suspend.target"
+
 function confirm_yn {
     local choice="${1:-y}"
     case $choice in
@@ -292,8 +303,26 @@ function install_configs {
     rsync -a "${CONF_DIR}"/* "${HOME}"/.config/
 }
 
-function start_networkManager {
-    sudo systemctl enable --now NetworkManager.service
+function conf_network_manager {
+    local SERVICE="NetworkManager.service"
+    if ! systemctl is-enabled $SERVICE || ! systemctl is-active $SERVICE; then
+        echo "Enabling $SERVICE..."
+        sudo systemctl enable --now $SERVICE
+    fi
+    echo "Setting NetworkManger to restart on resume from sleep..."
+    local SERVICE="NetworkManager-resume.service"
+    if [ ! -f "/etc/systemd/system/$SERVICE" ]; then
+        echo "Creating a unit file for $SERVICE..."
+        echo "$SERVICE_CONTENT" >$WORK_DIR/$SERVICE
+        sudo cp $WORK_DIR/$SERVICE /etc/systemd/system/$SERVICE
+        echo "Created /etc/systemd/system/$SERVICE."
+        echo "Enabling/Starting $SERVICE..."
+        sudo systemctl enable --now $SERVICE
+    fi
+    if ! systemctl is-enabled $SERVICE || ! systemctl is-active $SERVICE; then
+        echo "Enabling $SERVICE..."
+        sudo systemctl enable --now $SERVICE
+    fi
 }
 
 function config_git {
@@ -317,15 +346,22 @@ function install_zoxide_plugins {
     if ! [ -d "${RANGER_PLUGINS_DIR}/zoxide" ]; then
         mkdir -p "${RANGER_PLUGINS_DIR}/zoxide"
     fi
+    echo "Installing zoxide plugin for ranger..."
     git clone "git@github.com:jchook/ranger-zoxide.git" "${RANGER_PLUGINS_DIR}/zoxide"
+    echo "Installed zoxide plugin for ranger."
+    echo "Setting keybond 'cz' to zoxide in ranger..."
     local str="map cz console z%space"
     if [ -f "${RANGER_CONF_DIR}/rc.conf" ]; then
+        echo "${RANGER_CONF_DIR}/rc.conf exists. Checking if setting is already applied..."
         if ! (grep "$str" "${RANGER_CONF_DIR}/rc.conf"); then
+            echo "Keybind has not been set. Setting now..."
             echo "$str" >>"${RANGER_CONF_DIR}/rc.conf"
         fi
     else
+        echo "${RANGER_CONF_DIR}/rc.conf does not exist. Creating the file and setting the keybind..."
         echo "$str" >"${RANGER_CONF_DIR}/rc.conf"
     fi
+    echo "Completed installation/configuration of zoxide plugin for ranger."
 
 }
 
@@ -360,7 +396,7 @@ config_bees
 echo
 install_configs
 echo
-start_networkManager
+conf_networkManager
 echo
 config_git
 echo
