@@ -48,4 +48,4 @@ end
 starship init fish | source
 
 ### Initializing zoxide ###
-zoxide init fish | source
+zoxide init fish --cmd cd | source
