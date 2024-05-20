@@ -306,6 +306,17 @@ function set_shell {
     chsh -s /usr/bin/fish
 }
 
+function install_dracula {
+    
+}
+
+function install_zoxide_plugins {
+		RANGER_PLUGINS_DIR="$HOME/.config/ranger/plugins"
+		if ! [ -d "${RANGER_PLUGINS_DIR}/zoxide" ]; then
+				mkdir -p "${RANGER_PLUGINS_DIR}/zoxide"
+		fi
+		git clone "git@github.com:jchook/ranger-zoxide.git" "${RANGER_PLUGINS_DIR}/zoxide"
+
 check_dir
 echo
 config_pacman
