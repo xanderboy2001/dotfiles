@@ -307,15 +307,32 @@ function set_shell {
 }
 
 function install_dracula {
-    
+    true
 }
 
 function install_zoxide_plugins {
-		RANGER_PLUGINS_DIR="$HOME/.config/ranger/plugins"
-		if ! [ -d "${RANGER_PLUGINS_DIR}/zoxide" ]; then
-				mkdir -p "${RANGER_PLUGINS_DIR}/zoxide"
-		fi
-		git clone "git@github.com:jchook/ranger-zoxide.git" "${RANGER_PLUGINS_DIR}/zoxide"
+    ### RANGER ###
+    local RANGER_CONF_DIR="${HOME}/.config/ranger"
+    local RANGER_PLUGINS_DIR="${RANGER_CONF_DIR}/plugins"
+    if ! [ -d "${RANGER_PLUGINS_DIR}/zoxide" ]; then
+        mkdir -p "${RANGER_PLUGINS_DIR}/zoxide"
+    fi
+    git clone "git@github.com:jchook/ranger-zoxide.git" "${RANGER_PLUGINS_DIR}/zoxide"
+    local str="map cz console z%space"
+    if [ -f "${RANGER_CONF_DIR}/rc.conf" ]; then
+        if ! (grep "$str" "${RANGER_CONF_DIR}/rc.conf"); then
+            echo "$str" >>"${RANGER_CONF_DIR}/rc.conf"
+        fi
+    else
+        echo "$str" >"${RANGER_CONF_DIR}/rc.conf"
+    fi
+
+}
+
+if [ $# -ne 0 ]; then
+    for arg in "${@}"; do $arg; done
+    exit
+fi
 
 check_dir
 echo
