@@ -28,6 +28,7 @@ function check_deps {
 }
 
 function config_pacman {
+    FILE_CHANGED=false
     if ! [[ -f $PACMAN_CONF ]]; then
         echo "ERROR! ${PACMAN_CONF} does not exist! Pacman was not installed correctly!"
         exit
@@ -49,6 +50,7 @@ function config_pacman {
         echo "Multilib is required for many programs (like Steam)"
         read -rp "Install multilib? (Y/n) " CONFIRM
         if ( confirm_yn "$CONFIRM" ); then
+            FILE_CHANGED=true
             echo "Enabling the multilib repository..."
             sed -i "/\[multilib\]/,/Include/"'s/^#//' $PACMAN_CONF
         else
@@ -62,6 +64,7 @@ function config_pacman {
     if ( grep -xq "^#Color" $PACMAN_CONF ); then
         read -rp "Color output is not enabled in pacman. Would you like to enable it? (Y/n) " CONFIRM
         if ( confirm_yn "$CONFIRM" ); then
+            FILE_CHANGED=true
             echo "Enabling color output in pacman..."
             sed -i 's/^#Color/Color/' $PACMAN_CONF
         else
@@ -81,6 +84,7 @@ function config_pacman {
     if ( grep -q "^#ParallelDownloads" $PACMAN_CONF ); then
         read -rp "Would you like to enable parallel downloads in pacman? (Y/n) " CONFIRM
         if ( confirm_yn "$CONFIRM" ); then
+            FILE_CHANGED=true
             read -rp "How many downloads would you like to run in parallel? (Default: 5) " PARALLEL_DL_COUNT
             if [[ -z $PARALLEL_DL_COUNT ]]; then
                 PARALLEL_DL_COUNT=5
@@ -88,8 +92,10 @@ function config_pacman {
             sed -i "s/^#ParallelDownloads.*/ParallelDownloads = ${PARALLEL_DL_COUNT}/" $PACMAN_CONF
         fi
     fi
-    echo "Installing our edited pacman.conf file..."
-    sudo cp $PACMAN_CONF /etc/pacman.conf
+    if [[ $FILE_CHANGED == "true" ]]; then
+        echo "Installing our edited pacman.conf file..."
+        sudo cp $PACMAN_CONF /etc/pacman.conf
+    fi
 }
 
 function upgrade_system {
@@ -128,7 +134,7 @@ function check_pkg {
 function get_pkg_list {
     #PKG_LIST_URL="https://raw.githubusercontent.com/xanderboy2001/dotfiles/main/Scripts/pkgs"
     #curl "$PKG_LIST_URL" -o "${WORK_DIR}/pkg_list"
-    cp "$(dirname "$0")/pkgs" "${WORK_DIR}/pkg_list"
+    cp "/home/alex/dotfiles/Scripts/pkgs" "${WORK_DIR}/pkg_list"
     PKG_LIST_FILE="${WORK_DIR}/pkg_list"
     # Read pkgs file into PKGS array
     readarray -t PKG_LIST < "$PKG_LIST_FILE"
@@ -318,8 +324,7 @@ echo
 # Only run install_pkgs if we have packages to install
 install_pkgs "${SELECTED_PKGS[@]}"
 echo
-# Only configure nvidia if we aren't in a VM
-if ( ! facter is_virtual &>/dev/null ); then install_nvidia; fi
+install_nvidia
 echo
 add_bri_acct
 echo
