@@ -67,6 +67,7 @@ pipewire-pulse
 polkit
 protontricks
 python-xdg
+qt5ct
 qtile
 qtile-extras
 ranger
@@ -92,6 +93,7 @@ ttf-sourcecodepro-nerd
 udiskie
 unityhub
 unzip
+visual-studio-code-bin
 w3m
 windscribe-v2-bin
 wine
@@ -107,5 +109,3 @@ zathura
 zathura-pdf-poppler
 zip
 zoxide
-qt5ct
-visual-studio-code-bin
