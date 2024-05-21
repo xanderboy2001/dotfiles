@@ -9,7 +9,7 @@ set fish_greeting                                 # Supresses fish's intro messa
 set TERM "xterm-256color"                         # Sets the terminal type
 set EDITOR "nvim"       		                  		# $EDITOR use vi in terminal
 set VISUAL "nvim"		                          		# $VISUAL use nvim
-set QT_STYLE_OVERRIDE "kvantum"
+set QT_QPA_PLATFORMTHEME 'qt5ct'
 set VIRTUAL_ENV_DISABLE_PROMPT "1"								# Disable venv text from prepending shell prompt
 set -x MANROFFOPT "-c"														# Disable color output in man pages as bat already does it
 set -x SHELL /bin/fish														# Make default shell fish
@@ -33,11 +33,7 @@ set fish_color_error '#ff6c6b'
 set fish_color_param brcyan
 
 ### SSH-AGENT ###
-if not pgrep --full ssh-agent | string collect > /dev/null
-	eval (ssh-agent -c)
-	set -Ux SSH_AGENT_PID $SSH_AGENT_PID
-	set -Ux SSH_AUTH_SOCK $SSH_AUTH_SOCK
-end
+fish_ssh_agent
 
 ### SETTING THE STARSHIP PROMPT ###
 starship init fish | source
