@@ -13,7 +13,6 @@ bluez-utils
 btrfs-progs
 caffeine-ng
 cinnamon
-code
 colordiff
 conky
 controku
@@ -108,3 +107,5 @@ zathura
 zathura-pdf-poppler
 zip
 zoxide
+qt5ct
+visual-studio-code-bin
