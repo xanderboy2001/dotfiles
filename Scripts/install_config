@@ -4,6 +4,7 @@ set -euo pipefail
 WORK_DIR="/tmp/dotfiles"
 CONF_DIR="$(dirname "$0")/../.config"
 PACMAN_CONF="/etc/pacman.conf"
+TODO_FILE=${HOME}/TODO.txt
 # declare an empty array to be populated later
 declare -a NEEDED_PKGS=()
 declare -a SELECTED_PKGS=()
@@ -33,10 +34,55 @@ function confirm_yn {
     esac
 }
 
-function check_deps {
-    echo "Checking script dependencies"
-    check_pkg_list "${DEP_LIST[@]}"
-    install_pkgs "${NEEDED_PKGS[@]}"
+function check_pkg {
+    local pkg=$1
+    echo "Checking if ${pkg} is installed..."
+    if pacman -Q "$pkg" &>/dev/null; then
+        echo "${pkg} is installed!"
+        return 0
+    else
+        echo "${pkg} is not installed!"
+        return 1
+    fi
+}
+
+function remove_yay {
+    echo "Removing yay..."
+    sudo pacman --noconfirm -Rns yay
+    echo "Yay has been removed"
+}
+
+function install_paru {
+    echo "Installing paru..."
+    echo "Checking for dependencies..."
+    if ! (check_pkg base-devel); then
+        echo "Installing base-devel..."
+        sudo pacman -S --needed --noconfirm base-devel
+    fi
+    if ! (check_pkg git); then
+        echo "Installing git..."
+        sudo pacman -S --noconfirm git
+    fi
+    echo "Paru dependency check has succeeded"
+    git clone "https://aur.archlinux.org/paru.git" "${WORK_DIR}/paru"
+    cd "${WORK_DIR}/paru"
+    makepkg -si
+}
+
+function check_dir {
+    if ! [[ -d "$WORK_DIR" ]]; then
+        echo "$WORK_DIR does not exist!"
+        echo "Creating ${WORK_DIR}..."
+        mkdir "$WORK_DIR"
+        check_dir
+    elif [[ -n "$(ls -A ${WORK_DIR})" ]]; then
+        echo "${WORK_DIR} is not empty!"
+        echo "Emptying ${WORK_DIR}..."
+        rm -rf ${WORK_DIR:?}/*
+        check_dir
+    else
+        echo "$WORK_DIR exists and is empty"
+    fi
 }
 
 function config_pacman {
@@ -115,32 +161,42 @@ function upgrade_system {
     sudo pacman -Syyu --noconfirm
 }
 
-function check_dir {
-    if ! [[ -d "$WORK_DIR" ]]; then
-        echo "$WORK_DIR does not exist!"
-        echo "Creating ${WORK_DIR}..."
-        mkdir "$WORK_DIR"
-        check_dir
-    elif [[ -n "$(ls -A ${WORK_DIR})" ]]; then
-        echo "${WORK_DIR} is not empty!"
-        echo "Emptying ${WORK_DIR}..."
-        rm -rf ${WORK_DIR:?}/*
-        check_dir
+function check_paru {
+    if [ -f "/bin/paru" ]; then
+        echo "Paru is already installed. Skipping..."
+        return
+    elif [ -f "/bin/yay" ]; then
+        read -rp "Paru is not installed, but Yay is. Remove Yay and install Paru? (Y/n) " CONFIRM
+        if ! (confirm_yn "$CONFIRM"); then
+            echo "You have chosen to keep yay and skip the installation of paru"
+            return
+        elif (confirm_yn "$CONFIRM"); then
+            read -rp "This will uninstall yay and replace it with paru. Are you sure? (Y/n) " CONFIRM
+            if (confirm_yn "$CONFIRM"); then
+                remove_yay
+                install_paru
+            else
+                echo "Inconsistent answers. Redoing Paru/Yay check..."
+                check_paru
+            fi
+        fi
     else
-        echo "$WORK_DIR exists and is empty"
+        echo "Paru is not installed."
+        read -rp "Would you like to install paru? (NOTE: you will NOT be able to continue if you say no) (Y/n): " CONFIRM
+        if (confirm_yn "$CONFIRM"); then
+            install_paru
+        else
+            echo "Paru is the reccomended AUR wrapper. If you really don't want it, install yay and re-run this script."
+            echo "The AUR and a wrapper are a hard requirement for this config. You will not be able to continue without it."
+            exit
+        fi
     fi
 }
 
-function check_pkg {
-    local pkg=$1
-    echo "Checking if ${pkg} is installed..."
-    if pacman -Q "$pkg" &>/dev/null; then
-        echo "${pkg} is installed!"
-        return 0
-    else
-        echo "${pkg} is not installed!"
-        return 1
-    fi
+function check_deps {
+    echo "Checking script dependencies"
+    check_pkg_list "${DEP_LIST[@]}"
+    install_pkgs "${NEEDED_PKGS[@]}"
 }
 
 function get_pkg_list {
@@ -209,61 +265,6 @@ function install_pkgs {
             exit
         fi
     fi
-}
-
-function check_paru {
-    if [ -f "/bin/paru" ]; then
-        echo "Paru is already installed. Skipping..."
-        return
-    elif [ -f "/bin/yay" ]; then
-        read -rp "Paru is not installed, but Yay is. Remove Yay and install Paru? (Y/n) " CONFIRM
-        if ! (confirm_yn "$CONFIRM"); then
-            echo "You have chosen to keep yay and skip the installation of paru"
-            return
-        elif (confirm_yn "$CONFIRM"); then
-            read -rp "This will uninstall yay and replace it with paru. Are you sure? (Y/n) " CONFIRM
-            if (confirm_yn "$CONFIRM"); then
-                remove_yay
-                install_paru
-            else
-                echo "Inconsistent answers. Redoing Paru/Yay check..."
-                check_paru
-            fi
-        fi
-    else
-        echo "Paru is not installed."
-        read -rp "Would you like to install paru? (NOTE: you will NOT be able to continue if you say no) (Y/n): " CONFIRM
-        if (confirm_yn "$CONFIRM"); then
-            install_paru
-        else
-            echo "Paru is the reccomended AUR wrapper. If you really don't want it, install yay and re-run this script."
-            echo "The AUR and a wrapper are a hard requirement for this config. You will not be able to continue without it."
-            exit
-        fi
-    fi
-}
-
-function remove_yay {
-    echo "Removing yay..."
-    sudo pacman --noconfirm -Rns yay
-    echo "Yay has been removed"
-}
-
-function install_paru {
-    echo "Installing paru..."
-    echo "Checking for dependencies..."
-    if ! (check_pkg base-devel); then
-        echo "Installing base-devel..."
-        sudo pacman -S --needed --noconfirm base-devel
-    fi
-    if ! (check_pkg git); then
-        echo "Installing git..."
-        sudo pacman -S --noconfirm git
-    fi
-    echo "Paru dependency check has succeeded"
-    git clone "https://aur.archlinux.org/paru.git" "${WORK_DIR}/paru"
-    cd "${WORK_DIR}/paru"
-    makepkg -si
 }
 
 function install_nvidia {
@@ -336,7 +337,83 @@ function set_shell {
 }
 
 function install_dracula {
-    true
+    local DRACULA_DIR ${WORK_DIR}/dracula
+    # * Git
+    echo "Installing Dracula theme for git..."
+    git clone https://github.com/dracula/git.git "${DRACULA_DIR}/git"
+    cat "${DRACULA_DIR}/git/config/gitconfig" >>"${HOME}/.gitconfig"
+    echo "Installed Dracula theme and URL alias for git"
+    # * LibreOffice
+    echo "Installing Dracula theme for LibreOffice..."
+    git clone dracula://libreoffice "${DRACULA_DIR}/libreoffice"
+    "${DRACULA_DIR}/libreoffice/install.sh"
+    echo "Installed Dracula theme for LibreOffice"
+    echo "Choose Dracula in Tools -> Options -> Application Colors" | tee -a "$TODO_FILE"
+    # * GRUB
+    echo "Installing Dracula theme for GRUB..."
+    git clone dracula://grub "${DRACULA_DIR}/grub"
+    cp "${DRACULA_DIR}/grub/dracula/" /boot/grub/themes
+    local GRUB_CONF=/etc/default/grub
+    cp $GRUB_CONF ${WORK_DIR}/etc.default.grub
+    GRUB_CONF=${WORK_DIR}/etc.default.grub
+    sed -i 's/^#GRUB_THEME.*/GRUB_THEME=\/boot\/grub\/themes\/dracula\/theme.txt/' $GRUB_CONF
+    sudo cp $GRUB_CONF /etc/default/grub
+    sudo grub-mkconfig -o /boot/grub/grub.cfg
+    echo "Installed the Dracula theme for GRUB."
+    # * Firefox
+    echo "Install the Dracula theme for Firefox by signing into Firefox and enabling settings sync." | tee -a "$TODO_FILE"
+    # * Visual Studio Code
+    echo "Install the Dracula theme for Visual Studio Code by signing into Visual Studio Code via GitHub and enabling settings sync." | tee -a "$TODO_FILE"
+    # * GIMP
+    echo "Installing the Dracula theme for GIMP..."
+    git clone dracula://gimp "${DRACULA_DIR}/gimp"
+    cp -r "${DRACULA_DIR}/gimp/Dracula/" "${HOME}/.config/GIMP/2.10/themes/"
+    echo "Activate the Dracula theme for GIMP via Preferences > Interface > Theme > Dracula : OK" | tee -a "$TODO_FILE"
+    # * Xresources
+    echo "Installing Dracula's XResources file..."
+    git clone dracula://xresources "${DRACULA_DIR}/xresources"
+    cp "${DRACULA_DIR}/xresources/Xresources" "${HOME}/.Xresources"
+    echo "Installed Dracula's Xresources file"
+    # * Stylus
+    echo "Install the Stylus Firefox addon via https://addons.mozilla.org/en-US/firefox/addon/styl-us/" | tee -a "$TODO_FILE"
+    # * GitLab
+    echo "Use this link to install the GitLab Dracula theme via stylus: https://github.com/dracula/gitlab/raw/master/dracula.user.css" | tee -a "$TODO_FILE"
+    # * StackOverflow
+    echo "Make sure dark mode is enabled on https://stackoverflow.com" | tee -a "$TODO_FILE"
+    echo "Install the Dracla theme for StackOverflow via stylus: https://raw.githubusercontent.com/dracula/stackoverflow/master/dracula_for_stackoverflow.user.css"
+    # * Youtube
+    echo "Install the Dracula theme for Youtube via stylus: https://github.com/dracula/youtube/raw/main/dracula.user.css" | tee -a "$TODO_FILE"
+    # * GitHub
+    echo "Install the Dracula theme for GitHub via stylus: https://github.com/dracula/github/raw/master/style.user.css" | tee -a "$TODO_FILE"
+    # * Wallpaper
+    echo "Downloading and setting your wallpaper..."
+    aria2c https://github.com/dracula/wallpaper/blob/master/first-collection/arch.png -d "${HOME}/Pictures" -o wallpaper.png
+    feh --bg-scale "${HOME}/Pictures/wallpaper.png"
+    echo "Wallpaper set"
+    # * Zathura
+    echo "Installing Dracula theme for Zathura..."
+    git clone dracula://zathura "${HOME}/.config/zathura/"
+    echo "Installed Dracula theme for Zathura"
+    # * Thunderbird
+    echo "Install the Dracula theme for Thunderbird via https://addons.thunderbird.net/en-US/thunderbird/addon/dracula-theme-for-thunderbird/" | tee -a "$TODO_FILE"
+    # * GTK
+    aria2c https://github.com/dracula/gtk/archive/master.zip -d "${DRACULA_DIR}/gtk" -o master.zip
+    unzip "${DRACULA_DIR}/gtk/master.zip" -d "${HOME}/.themes"
+    gsettings set org.gnome.desktop.interface gtk-theme "Dracula"
+    gsettings set org.gnome.desktop.wm.preferences theme "Dracula"
+    echo "Set GTK theme to Dracula"
+    aria2c https://github.com/dracula/gtk/files/5214870/Dracula.zip -d "${DRACULA_DIR}/gtk" -o icons.zip
+    unzip "${DRACULA_DIR}/gtk/icons.zip" -d "${HOME}/.icons"
+    gsettings set org.gnome.desktop.interface icon-theme "Dracula"
+    echo "Set icon theme to Dracula"
+    # * qt5
+    echo "Installing Dracula theme for qt5..."
+    git clone dracula://gt5 "${DRACULA_DIR}/qt5"
+    cp "${DRACULA_DIR}/qt5/Dracula.conf" "${HOME}/.config/qt5ct/colors"
+}
+
+function install_fish_plugins {
+    fisher update
 }
 
 function install_zoxide_plugins {
@@ -396,8 +473,14 @@ config_bees
 echo
 install_configs
 echo
-conf_networkManager
+conf_network_manager
 echo
 config_git
 echo
 set_shell
+echo
+install_dracula
+echo
+install_fish_plugins
+echo
+install_zoxide_plugins
