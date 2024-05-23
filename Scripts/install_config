@@ -329,7 +329,6 @@ function conf_network_manager {
 function config_git {
     git config --global user.name "Alexader Christian"
     git config --global user.email "alexanderechristian@gmail.com"
-    git config --global init.defaultBranch master
 }
 
 function set_shell {
@@ -346,13 +345,15 @@ function install_dracula {
     # * LibreOffice
     echo "Installing Dracula theme for LibreOffice..."
     git clone dracula://libreoffice "${DRACULA_DIR}/libreoffice"
+    libreoffice --terminate_after_init
+    ( cd "${DRACULA_DIR}"/libreoffice && ./install.sh )
     "${DRACULA_DIR}/libreoffice/install.sh"
     echo "Installed Dracula theme for LibreOffice"
     echo "Choose Dracula in Tools -> Options -> Application Colors" | tee -a "$TODO_FILE"
     # * GRUB
     echo "Installing Dracula theme for GRUB..."
     git clone dracula://grub "${DRACULA_DIR}/grub"
-    cp "${DRACULA_DIR}/grub/dracula/" /boot/grub/themes
+    sudo cp -r "${DRACULA_DIR}/grub/dracula/" /boot/grub/themes
     local GRUB_CONF=/etc/default/grub
     cp $GRUB_CONF ${WORK_DIR}/etc.default.grub
     GRUB_CONF=${WORK_DIR}/etc.default.grub
@@ -367,6 +368,10 @@ function install_dracula {
     # * GIMP
     echo "Installing the Dracula theme for GIMP..."
     git clone dracula://gimp "${DRACULA_DIR}/gimp"
+    gimp &
+    local GIMP_PID=$!
+    sleep 0.5
+    kill -KILL $GIMP_PID
     cp -r "${DRACULA_DIR}/gimp/Dracula/" "${HOME}/.config/GIMP/2.10/themes/"
     echo "Activate the Dracula theme for GIMP via Preferences > Interface > Theme > Dracula : OK" | tee -a "$TODO_FILE"
     # * Xresources
@@ -387,7 +392,7 @@ function install_dracula {
     echo "Install the Dracula theme for GitHub via stylus: https://github.com/dracula/github/raw/master/style.user.css" | tee -a "$TODO_FILE"
     # * Wallpaper
     echo "Downloading and setting your wallpaper..."
-    aria2c https://github.com/dracula/wallpaper/blob/master/first-collection/arch.png -d "${HOME}/Pictures" -o wallpaper.png
+    aria2c https://github.com/dracula/wallpaper/blob/master/first-collection/arch.png --allow-overwrite -d "${HOME}/Pictures" -o wallpaper.png
     feh --bg-scale "${HOME}/Pictures/wallpaper.png"
     echo "Wallpaper set"
     # * Zathura
@@ -408,12 +413,12 @@ function install_dracula {
     echo "Set icon theme to Dracula"
     # * qt5
     echo "Installing Dracula theme for qt5..."
-    git clone dracula://gt5 "${DRACULA_DIR}/qt5"
+    git clone dracula://qt5 "${DRACULA_DIR}/qt5"
     cp "${DRACULA_DIR}/qt5/Dracula.conf" "${HOME}/.config/qt5ct/colors"
 }
 
 function install_fish_plugins {
-    fisher update
+    echo "Log out and back in to update your shell. Then, run \`fisher update\` to install fisher plugins" | tee -a "$TODO_FILE"
 }
 
 function install_zoxide_plugins {
