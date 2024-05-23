@@ -336,7 +336,7 @@ function set_shell {
 }
 
 function install_dracula {
-    local DRACULA_DIR ${WORK_DIR}/dracula
+    local DRACULA_DIR=${WORK_DIR}/dracula
     # * Git
     echo "Installing Dracula theme for git..."
     git clone https://github.com/dracula/git.git "${DRACULA_DIR}/git"
@@ -392,7 +392,7 @@ function install_dracula {
     echo "Install the Dracula theme for GitHub via stylus: https://github.com/dracula/github/raw/master/style.user.css" | tee -a "$TODO_FILE"
     # * Wallpaper
     echo "Downloading and setting your wallpaper..."
-    aria2c https://github.com/dracula/wallpaper/blob/master/first-collection/arch.png --allow-overwrite -d "${HOME}/Pictures" -o wallpaper.png
+    aria2c https://github.com/dracula/wallpaper/blob/master/first-collection/arch.png?raw=true --allow-overwrite -d "${HOME}/Pictures" -o wallpaper.png
     feh --bg-scale "${HOME}/Pictures/wallpaper.png"
     echo "Wallpaper set"
     # * Zathura
@@ -429,7 +429,7 @@ function install_zoxide_plugins {
         mkdir -p "${RANGER_PLUGINS_DIR}/zoxide"
     fi
     echo "Installing zoxide plugin for ranger..."
-    git clone "git@github.com:jchook/ranger-zoxide.git" "${RANGER_PLUGINS_DIR}/zoxide"
+    git clone "https://github.com/jchook/ranger-zoxide.git" "${RANGER_PLUGINS_DIR}/zoxide"
     echo "Installed zoxide plugin for ranger."
     echo "Setting keybond 'cz' to zoxide in ranger..."
     local str="map cz console z%space"
