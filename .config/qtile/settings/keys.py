@@ -1,5 +1,5 @@
 from libqtile.config import Key, KeyChord
-from libqtile.command import lazy
+from libqtile.lazy import lazy
 from settings.path import *
 from settings.functions import *
 from os import path

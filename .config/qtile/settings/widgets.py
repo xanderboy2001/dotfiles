@@ -1,5 +1,5 @@
-from libqtile import widget
-from libqtile.command import lazy
+#from libqtile import widget
+from libqtile.lazy import lazy
 from settings.theme import colors
 from settings.functions import show_power_menu
 from qtile_extras import widget

@@ -30,17 +30,6 @@ layouts = [
 floating_layout = layout.Floating(
     float_rules=[
         *layout.Floating.default_float_rules,
-        Match(wm_class=["confirmreset",
-              "makebranch",
-              "maketag",
-              "ssh-askpass",
-              "Cava",
-              "Tilda",
-              "Yad",
-              "MEGAsync", 
-              "Unity",
-              "Windscribe2",
-              ]),
-        Match(title=["branchdialog", "pinentry"]),
+        Match(title="branchdialog"),Match(title="pinentry")
     ]
 )
