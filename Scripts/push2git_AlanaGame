@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-set -euo pipefail
-
-cd $HOME/Unity/AlanaGame
-git add .
-git commit -m "Manual Commit"
-git push
