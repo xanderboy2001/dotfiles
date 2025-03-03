@@ -15,7 +15,6 @@ call plug#begin('~/.vim/plugged')
     Plug 'sheerun/vim-polyglot'
     Plug 'tpope/vim-sensible'
     Plug 'junegunn/vim-easy-align'
-    Plug 'tmhedberg/simpylfold'
 call plug#end()
 
 set shiftwidth=4
