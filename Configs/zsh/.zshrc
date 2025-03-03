@@ -92,6 +92,10 @@ alias mkdir='mkdir -p'
 # append
 export PATH="$PATH:/home/alex/.local/bin"
 
+### GEM ###
+# set gem home to ~/.gem
+export GEM_HOME=$HOME/.gem
+
 ### FZF ###
 source <(fzf --zsh)
 
@@ -100,3 +104,4 @@ eval "$(starship init zsh)"
 
 ### Zoxide ###
 eval "$(zoxide init zsh --cmd cd)"
+source /usr/share/nvm/init-nvm.sh
