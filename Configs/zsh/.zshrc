@@ -84,7 +84,11 @@ alias yayrem='yay -Rns'
 alias yaylocs='yay -Qs'
 alias vim='nvim'
 #alias rm="trash"
-alias cat='bat'
+if bat_loc="$(type -p "bat")" || [[ -z $bat_loc ]]; then
+		alias cat='bat'
+elif batcat_loc="$(type -p "batcat")" || [[ -z $batcat_loc ]]; then
+		alias cat='batcat'
+fi
 alias ls='exa -al --icons --color=always -g --group-directories-first'
 alias mkdir='mkdir -p'
 
@@ -97,15 +101,15 @@ export PATH="$PATH:/home/alex/.local/bin"
 export GEM_HOME=$HOME/.gem
 
 ### FZF ###
-source <(fzf --zsh)
+fzf_version="$(fzf --version | cut -d. -f2)"
+if [ $fzf_version -lt 48 ]; then
+		source /usr/share/doc/fzf/examples/*.zsh
+else
+		source <(fzf --zsh)
+fi
 
 ### Starship ###
 eval "$(starship init zsh)"
 
 ### Zoxide ###
 eval "$(zoxide init zsh --cmd cd)"
-source /usr/share/nvm/init-nvm.sh
-
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
