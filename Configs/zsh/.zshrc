@@ -91,6 +91,7 @@ elif batcat_loc="$(type -p "batcat")" || [[ -z $batcat_loc ]]; then
 fi
 alias ls='exa -al --icons --color=always -g --group-directories-first'
 alias mkdir='mkdir -p'
+alias eos-update='eos-update --aur'
 
 ### PATH ###
 # append
@@ -113,3 +114,7 @@ eval "$(starship init zsh)"
 
 ### Zoxide ###
 eval "$(zoxide init zsh --cmd cd)"
+
+### Node Version Manager ###
+NVM_INIT_PATH=/usr/share/nvm/init-nvm.sh
+if [ -f $NVM_INIT_PATH ]; then . $NVM_INIT_PATH; fi
