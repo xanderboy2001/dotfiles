@@ -7,9 +7,11 @@ from os import path
 # Rofi Commands
 ROFI_WINDOW_SWITCHER_CMD="rofi -show window -modi window -window-matching-fields desktop -filter -ScratchPad -show-icons -window-prefer-icon-theme true -theme-str 'inputbar { enabled: false; } listview { fixed-height: false; }'"
 ROFI_CALC_CMD="rofi -show calc -modi calc -no-show-match -no-sort -theme-str 'inputbar { enabled: false; } listview { fixed-height: false; }'"
-ROFI_POWER_MENU_CMD="rofi -show power-menu -modi power-menu:rofi-power-menu"
-ROFI_GREENCLIP_CMD="rofi -modi \"clipboard:greenclip print\" -show clipboard -run-command '{cmd}'"
-#entry { placeholder: Calculate; }'"
+ROFI_POWER_MENU_CMD=f'{rofi_path}/powermenu/type-1/powermenu.sh'
+ROFI_GREENCLIP_CMD="rofi -modi 'clipboard:greenclip print' -show clipboard -run-command '{cmd}'"
+ROFI_GAMES_CMD="rofi -modi games -show games -theme games"
+ROFI_LAUNCHER_CMD=f'{rofi_path}/launchers/type-2/launcher.sh'
+ROFI_SYMBOL_CMD="rofi -modi 'emoji:rofimoji',nerdy -show emoji"
 
 mod="mod4"
 
@@ -42,7 +44,7 @@ keys = [
         desc='Launch terminal'
         ),
     Key([mod, "shift"], "Return",
-        lazy.spawn("/home/alex/.config/rofi/launchers/type-3/launcher.sh"),
+        lazy.spawn(ROFI_LAUNCHER_CMD),
         desc='Run Rofi Launcher'
         ),
     ### ScratchPads
@@ -60,8 +62,12 @@ keys = [
         lazy.spawn("zen-browser"),
         desc='Spawn Zen Browser'
         ),
+    Key([mod], "e",
+        lazy.spawn(ROFI_SYMBOL_CMD),
+        desc='Spawn Symbol Picker (rofi)'
+        ),
     Key([mod], "g",
-        lazy.spawn("/home/alex/.config/rofi/launchers/type-3/launcher-games.sh"),
+        lazy.spawn(ROFI_GAMES_CMD),
         desc="Games Applet"
         ),
     Key([mod], "v",
@@ -71,10 +77,6 @@ keys = [
     Key(["mod1"], "Tab",
         lazy.spawn(ROFI_WINDOW_SWITCHER_CMD),
         desc="Switch Between Windows"
-        ),
-    Key([mod], "slash",
-        lazy.spawn("/home/alex/Scripts/rofi-search-script"),
-        desc="Search the web with Rofi"
         ),
     ### Core Qtile Functions
     Key([mod], "Tab",
@@ -179,12 +181,8 @@ keys = [
         desc='toggle between split and unsplit sides of stack'
         ),
     ### Keyboard buttons
-    Key([], "XF86AudioRaiseVolume", lazy.spawn("pulseaudio-ctl up 1"), desc="Raise Volume"),
-    Key([], "XF86AudioLowerVolume", lazy.spawn("pulseaudio-ctl down 1"), desc="Lower Volume"),
-    Key([], "XF86AudioMute", lazy.spawn("pulseaudio-ctl mute"), desc="Mute Volume"),
-    Key([], "XF86AudioPlay", lazy.spawn("playerctl play-pause"), desc="Play/Pause"),
-    Key([], "XF86AudioStop", lazy.spawn("playerctl stop"), desc="Stop"),
-    Key([], "XF86AudioNext", lazy.spawn("playerctl next"), desc="Next"),
-    Key([], "XF86AudioPrev", lazy.spawn("playerctl previous"), desc="Prev"),
+    Key([], "XF86AudioRaiseVolume", lazy.spawn(f'{qtile_path}/scripts/change-volume.sh up'), desc="Raise Volume"),
+    Key([], "XF86AudioLowerVolume", lazy.spawn(f'{qtile_path}/scripts/change-volume.sh down'), desc="Lower Volume"),
+    Key([], "XF86AudioMute", lazy.spawn(f'{qtile_path}/scripts/mute-volume.sh'), desc="Mute Volume")
 ]
 # END_KEYS
