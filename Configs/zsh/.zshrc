@@ -118,3 +118,6 @@ eval "$(zoxide init zsh --cmd cd)"
 ### Node Version Manager ###
 NVM_INIT_PATH=/usr/share/nvm/init-nvm.sh
 if [ -f $NVM_INIT_PATH ]; then . $NVM_INIT_PATH; fi
+
+### QT ###
+QT_QPA_PLATFORMTHEME='qt6ct'
