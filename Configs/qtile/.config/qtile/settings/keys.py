@@ -7,6 +7,8 @@ from os import path
 # Rofi Commands
 ROFI_WINDOW_SWITCHER_CMD="rofi -show window -modi window -window-matching-fields desktop -filter -ScratchPad -show-icons -window-prefer-icon-theme true -theme-str 'inputbar { enabled: false; } listview { fixed-height: false; }'"
 ROFI_CALC_CMD="rofi -show calc -modi calc -no-show-match -no-sort -theme-str 'inputbar { enabled: false; } listview { fixed-height: false; }'"
+ROFI_POWER_MENU_CMD="rofi -show power-menu -modi power-menu:rofi-power-menu"
+ROFI_GREENCLIP_CMD="rofi -modi \"clipboard:greenclip print\" -show clipboard -run-command '{cmd}'"
 #entry { placeholder: Calculate; }'"
 
 mod="mod4"
@@ -18,10 +20,6 @@ SCRATCHPAD_CHORD=KeyChord(
                 lazy.group['scratchpad'].dropdown_toggle('term'),
                 desc='Toggle terminal ScratchPad'
                 ),
-            Key([], "m",
-                lazy.group['scratchpad'].dropdown_toggle('music'),
-                desc='Toggle Cider ScrathPad'
-                ),
             Key([], "c",
                 lazy.group['scratchpad'].dropdown_toggle('tgpt'),
                 desc='Toggle tgpt ScratchPad'
@@ -31,79 +29,12 @@ SCRATCHPAD_CHORD=KeyChord(
                 desc='Toggle Ranger ScratchPad'
                 ),
         ])
-ROFI_CHORD=KeyChord(
-        [mod], "r", [
-            Key([], "h",
-                lazy.spawn("dm-hub -r"),
-                desc="Spawn dmscripts Hub (in Rofi)"
-                ),
-            Key([], "a",
-                lazy.spawn("dm-pipewire-out-switcher -r"),
-                desc="Spawn dmscript to change audio output (in Rofi)"
-                ),
-            Key([], "b",
-                lazy.spawn("dm-bookman-brave -r"),
-                desc="Spawn dmbookman Brave (in Rofi)"
-                ),
-            KeyChord([], "c", [
-                # The following are a chain of keys. For example,
-                # to launch the dmscripts config editor, you
-                # press 'mod' + c + e
-                Key([], "a",
-                    lazy.spawn(ROFI_CALC_CMD),
-                    desc="Spawn a calculator in Rofi"
-                    ),
-                Key([], "e",
-                    lazy.spawn("dm-confedit -r"),
-                    desc="Spawn dmscripts config editor (in Rofi)"
-                    ),
-                Key([], "p",
-                    lazy.spawn("dm-colpick -r"),
-                    desc="Spawn dmscripts color picker (in Rofi)"
-                    ),
-                ]),
-            KeyChord([], "d", [
-                # This is another key chain, same as above
-                Key([], "i",
-                    lazy.spawn("dm-dictionary -r"),
-                    desc="Spawn dmscripts dictionary (in Rofi)"
-                    ),
-                Key([], "o",
-                    lazy.spawn("dm-documents -r"),
-                    desc="Spawn dmscripts documents browser (in Rofi)"
-                    ),
-                ]),
-            Key([], "i",
-                lazy.spawn("dm-ip -r"),
-                desc="Spawn dmscript to get ip (in Rofi)"
-                ),
-            Key([], "k",
-                lazy.spawn("dm-kill -r"),
-                desc="Spawn dmscript to kill process (in Rofi)"
-                ),
-            Key([], "n",
-                lazy.spawn("dm-note -r"),
-                desc="Spawn dmscript to take quick notes (in Rofi)"
-                ),
-            Key([], "u",
-                lazy.spawn("dm-usbmount -r"),
-                desc="Spawn dmscript to mount usb drives (in Rofi)"
-                ),
-            Key(["shift"], "u",
-                lazy.spawn("dm-usbmount -R"),
-                desc="Spawn dmscript to unmount usb drives (in Rofi)"
-                ),
-            Key([], "w",
-                lazy.spawn("dm-websearch -r"),
-                desc="Spawn dmscript to search the web (in Rofi)"
-                ),
-            ])
 
 # START_KEYS
 keys = [
     ### The essentials
     Key(["control", "mod1"], "Delete",
-        lazy.spawn("/home/alex/.config/rofi/powermenu/type-2/powermenu.sh"),
+        lazy.spawn(ROFI_POWER_MENU_CMD),
         desc="Run Rofi power menu."
         ),
     Key([mod], "Return",
@@ -116,7 +47,6 @@ keys = [
         ),
     ### ScratchPads
     SCRATCHPAD_CHORD,
-    ROFI_CHORD,
     ### Program Shortcuts
     Key([], "Print",
         lazy.spawn("flameshot gui"),
@@ -127,12 +57,16 @@ keys = [
         desc="Apps Applet"
         ),
     Key([mod], "b",
-        lazy.spawn("firefox"),
-        desc='Spawn Firefox'
+        lazy.spawn("zen-browser"),
+        desc='Spawn Zen Browser'
         ),
     Key([mod], "g",
         lazy.spawn("/home/alex/.config/rofi/launchers/type-3/launcher-games.sh"),
         desc="Games Applet"
+        ),
+    Key([mod], "v",
+        lazy.spawn(ROFI_GREENCLIP_CMD),
+        desc="Spawn rofi-greenclip"
         ),
     Key(["mod1"], "Tab",
         lazy.spawn(ROFI_WINDOW_SWITCHER_CMD),
