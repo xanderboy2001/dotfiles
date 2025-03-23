@@ -11,23 +11,48 @@ scratchpad_conf = {"opacity": 0.95,
 
 groups = [
 
-        Group(name="1", label="  ", layout="monadtall"),
-        Group(name="2", label="  ", layout="treetab"),
-        Group(name="3", label="  ", layout="monadtall"),
-        Group(name="4", label="  ", layout="max"),
-        Group(name="5", label=" 󰓓 ", layout="max"),
-        Group(name="6", label=" 󰇮 ", layout="max"),
-        Group(name="7", label=" 7 ", layout="treetab"),
-        Group(name="8", label="  ", layout="max"),
-        Group(name="9", label=" 󰚯 ", layout="monadtall"),
+        Group(name="1",
+              label="  ",
+              layout="monadtall"
+              ),
+        Group(name="2",
+              label="  ",
+              layout="treetab",
+              matches=[Match(wm_class="zen")]
+              ),
+        Group(name="3",
+              label="  ",
+              layout="monadtall"
+              ),
+        Group(name="4",
+              label="  ",
+              layout="max"
+              ),
+        Group(name="5",
+              label=" 󰓓 ",
+              layout="max", matches=[Match(wm_class="steam")]
+              ),
+        Group(name="6",
+              label=" 󰇮 ",
+              layout="max"
+              ),
+        Group(name="7",
+              label=" 7 ",
+              layout="treetab"
+              ),
+        Group(name="8",
+              label="  ",
+              layout="max"
+              ),
+        Group(name="9",
+              label="  ",
+              layout="monadtall"
+              ),
         ScratchPad("scratchpad", [
             # define a drop down terminal
             # placed in upper third of screen by default
             DropDown("term",
                      "alacritty",
-                     **scratchpad_conf),
-            DropDown("music",
-                     "cider",
                      **scratchpad_conf),
             DropDown("ranger",
                      "alacritty -e ranger",
