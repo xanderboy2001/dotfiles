@@ -1,0 +1,109 @@
+# Dotfiles
+
+This repository contains my personal configuration files (dotfiles) for varios tools and environments. I manage these files using [GNU Stow](https://www.gnu.org/software/stow/) to easily symlink them into their proper locations.
+
+Currently included configurations:
+
+- **fish**
+- **git**
+- **github**
+- **neovim**
+- **starship**
+- **zellij**
+
+
+---
+
+
+## Table of Contents
+
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Adding New Dotfiles](#adding-new-dotfiles)
+- [Updating Dotfiles](#updating-dotfiles)
+- [License](#license)
+
+
+---
+
+
+## Prerequisites
+
+Before setting up, ensure the following tools are installed on your machine:
+
+- **git**
+- **GNU Stow**
+- The applications for which you have dotfiles (e.g. fish, neovim, hyprland, zellij, starship)
+
+You can install GNU stow on most Linux systems with:
+
+```bash
+sudo pacman -S stow				# Arch
+sudo apt install stow			# Debian/Ubuntu
+```
+
+
+---
+
+
+## Installation
+
+1. **Clone the repository**
+```bash
+git clone https://github.com/xanderboy2001/dotfiles.git ~/.dotfiles
+cd ~/.dotfiles
+```
+
+2. **Use Stow to deploy dotfiles**
+Each folder in the repository corresponds to a package you can deploy. For example:
+```bash
+cd ~/.dotfiles
+
+# Deploy all dotfiles
+stow fish <app-name>
+```
+This will symlink each configuration file to the appropriate location in your home directory.
+
+3. **Verify configuration**
+- Open a new shell to ensure fish is using your configuration.
+- Start `nvim` or `zellij` to confirm the configurations are applied
+- For Hyprland and Starship, ensure the applications pick up the new configs on start.
+
+
+---
+
+
+## Adding New Dotfiles
+To add a new application configuration:
+1. Create a folder with the application name:
+```bash
+mkdir ~/.dotfiles/<app-name>
+```
+2. Place the configuration files in that folder, preserving the directory structure relative to `$HOME`. For example, if a file normally goes in `~/.config/app/config.toml`, place it as:
+```bash
+dotfiles/<app-name>/.config/app/config.toml
+```
+3. Stow the new configuration:
+```bash
+stow <app-name>
+```
+
+
+---
+
+
+## Updating Dotfiles
+To update your dotfiles on a machine with the latest changes:
+```bash
+cd ~/.dotfiles
+git pull
+stow -R <app-name>
+```
+The `-R` flag re-stows existing configurations to apply any updates
+
+
+---
+
+
+## License
+These dotfiles are open-source. Feel free to fork and adapt them for your own use.
