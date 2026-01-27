@@ -1,1 +1,0 @@
-/home/alex/Documents/Scripts/Bash/wallpaper-slideshow.sh
