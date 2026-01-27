@@ -47,7 +47,7 @@ set clipboard=unnamedplus
 augroup script_templates
 		autocmd!
 		" When starting a new file ending in .sh, read skeleton file
-		autocmd BufNewFile *.sh 0read ~/.config/nvim/templates/bash_skeleton.sh
+		autocmd BufNewFile *.sh 0read ~/.config/nvim/templates/bash_skeleton.sh | !normal G
 augroup END
 
 " script permissions
