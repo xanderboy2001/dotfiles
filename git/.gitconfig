@@ -1,3 +1,5 @@
+[include]
+		path = ~/.gitconfig.dracula
 [user]
 	name = Alexander Christian
 	email = alexanderechristian@gmail.com
