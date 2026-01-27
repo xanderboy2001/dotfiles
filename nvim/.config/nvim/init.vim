@@ -41,3 +41,18 @@ let g:airline_symbols.maxlinenr = '☰ '
 let g:airline_symbols.dirty='⚡'
 
 set clipboard=unnamedplus
+
+
+" script templates
+augroup script_templates
+		autocmd!
+		" When starting a new file ending in .sh, read skeleton file
+		autocmd BufNewFile *.sh 0read ~/.config/nvim/templates/bash_skeleton.sh
+augroup END
+
+" script permissions
+augroup script_permissions
+		autocmd!
+		" Make .sh scripts executable when we save it
+		autocmd BufWritePost *.sh silent! !chmod +x %
+augroup END
