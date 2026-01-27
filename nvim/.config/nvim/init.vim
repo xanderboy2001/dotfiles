@@ -6,15 +6,15 @@ endif
 
 call plug#begin('~/.vim/plugged')
     Plug 'dracula/vim', { 'as': 'dracula' }
+    Plug 'junegunn/vim-easy-align'
+    Plug 'mg979/vim-visual-multi', {'branch': 'master'}
+    Plug 'sheerun/vim-polyglot'
+    Plug 'tpope/vim-commentary'
+    Plug 'tpope/vim-sensible'
     Plug 'tpope/vim-surround'
     Plug 'vim-airline/vim-airline'
     Plug 'vim-airline/vim-airline-themes'
-    Plug 'tpope/vim-commentary'
-    Plug 'mg979/vim-visual-multi', {'branch': 'master'}
     Plug 'yggdroot/indentline'
-    Plug 'sheerun/vim-polyglot'
-    Plug 'tpope/vim-sensible'
-    Plug 'junegunn/vim-easy-align'
 call plug#end()
 
 set shiftwidth=4
