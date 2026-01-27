@@ -2,7 +2,7 @@
 
 # Strict settings
 set -o errexit
-set -o popefail
+set -o pipefail
 set -o nounset
 
 # On-the-fly-debugging
