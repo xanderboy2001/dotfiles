@@ -8,29 +8,30 @@ if empty(glob(data_dir . '/autoload/plug.vim'))
 endif
 
 call plug#begin('~/.vim/plugged')
-		Plug 'dracula/vim', { 'as': 'dracula' }
-		Plug 'junegunn/vim-easy-align'
-		Plug 'mg979/vim-visual-multi', {'branch': 'master'}
-		Plug 'tpope/vim-commentary'
-		Plug 'tpope/vim-sensible'
-		Plug 'tpope/vim-surround'
-		Plug 'vim-airline/vim-airline'
-		Plug 'vim-airline/vim-airline-themes'
+  Plug 'dracula/vim', { 'as': 'dracula' }
+  Plug 'junegunn/vim-easy-align'
+  Plug 'mg979/vim-visual-multi', {'branch': 'master'}
+  Plug 'tpope/vim-commentary'
+  Plug 'tpope/vim-sensible'
+  Plug 'tpope/vim-surround'
+  Plug 'vim-airline/vim-airline'
+  Plug 'vim-airline/vim-airline-themes'
 
-		" Python & LSP Plugins
-		Plug 'neovim/nvim-lspconfig'
-		Plug 'williamboman/mason.nvim'
-		Plug 'williamboman/mason-lspconfig.nvim'
-		Plug 'stevearc/conform.nvim'									" Black Formatter
-		Plug 'hrsh7th/nvim-cmp'												" Autocomplete engine
-		Plug 'hrsh7th/cmp-nvim-lsp'										" LSP source for autocompletion
-		Plug 'L3MON4D3/LuaSnip'												" Snippet engine
-		Plug 'lukas-reineke/indent-blankline.nvim'		" Modern Indent Guides (PEP 8)
-		Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+  " Python & LSP Plugins
+  Plug 'neovim/nvim-lspconfig'
+  Plug 'williamboman/mason.nvim'
+  Plug 'williamboman/mason-lspconfig.nvim'
+  Plug 'stevearc/conform.nvim'									" Black Formatter
+  Plug 'hrsh7th/nvim-cmp'												" Autocomplete engine
+  Plug 'hrsh7th/cmp-nvim-lsp'										" LSP source for autocompletion
+  Plug 'L3MON4D3/LuaSnip'												" Snippet engine
+  Plug 'lukas-reineke/indent-blankline.nvim'		" Modern Indent Guides (PEP 8)
+  Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 call plug#end()
 
 " Basic Settings
 set shiftwidth=2
+set expandtab
 set number
 colorscheme dracula
 set clipboard=unnamedplus
@@ -39,7 +40,7 @@ set clipboard=unnamedplus
 let g:airline_powerline_fonts = 1
 
 if !exists('g:airline_symbols')
-		let g:airline_symbols = {}
+  let g:airline_symbols = {}
 endif
 
 " powerline symbols
@@ -67,7 +68,7 @@ lua << EOF
 -- 1. Setup Mason to auto-install Python tools
 require("mason").setup()
 require("mason-lspconfig").setup({
-		ensure_installed = { "pyright", "ruff" }
+  ensure_installed = { "pyright", "ruff" }
 })
 
 -- 2. LSP Setup
@@ -75,25 +76,35 @@ local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
 -- Setup Pyright
 vim.lsp.config('pyright', {
-		capabilities = capabilities,
+  capabilities = capabilities,
+  settings = {
+    python = {
+      analysis = {
+        typeCheckingMode = "basic", -- Helps with rich/questionary typing
+        autoSearchPaths = true,
+        useLibraryCodeForTypes = true, -- Crucial for third-party libs
+        diagnosticMode = "workspace",
+      },
+    },
+  },
 })
 vim.lsp.enable('pyright')
 
 -- Setup Ruff
 vim.lsp.config('ruff', {
-		capabilities = capabilities,
+  capabilities = capabilities,
 })
 vim.lsp.enable('ruff')
 
 -- 3. Conform Setup (Black for PEP 8 formatting)
 require("conform").setup({
-		formatters_by_ft = {
-				python = { "black" },
-		},
-		format_on_save = {
-				timeout_ms = 500,
-				lsp_fallback = true,
-		},
+  formatters_by_ft = {
+    python = { "black" },
+  },
+  format_on_save = {
+    timeout_ms = 500,
+    lsp_fallback = true,
+  },
 })
 
 -- 4. Indent Guides
@@ -101,20 +112,24 @@ require("ibl").setup()
 
 -- 5. Treesitter (Better Highlighting)
 require'nvim-treesitter'.setup {
-	install_dir = vim.fn.stdpath('data') .. '/site'
+  install_dir = vim.fn.stdpath('data') .. '/site'
 }
 require'nvim-treesitter'.install { 'python', 'lua', 'vim', 'vimdoc' } 
 
--- 6. Autocomplete Keymaps
+-- 6. Autocomplete Setup
 local cmp = require("cmp")
 cmp.setup({
-		snippet = { expand = function(args) require("luasnip").lsp_expand(args.body) end },
-		mapping = cmp.mapping.preset.insert({
-				['<CR>'] = cmp.mapping.confirm({ select = true }),
-				['<Tab>'] = cmp.mapping.select_next_item(),
-				['<S-Tab>'] = cmp.mapping.select_prev_item(),
-		}),
-		sources = cmp.config.sources({{ name = 'nvim_lsp' }})
+  snippet = { expand = function(args) require("luasnip").lsp_expand(args.body) end },
+  mapping = cmp.mapping.preset.insert({
+    ['<CR>'] = cmp.mapping.confirm({ select = true }),
+    ['<Tab>'] = cmp.mapping.select_next_item(),
+    ['<S-Tab>'] = cmp.mapping.select_prev_item(),
+  }),
+  sources = cmp.config.sources({{ name = 'nvim_lsp' },
+    { name = 'luasnip' },
+  }, {
+    { name = 'buffer' },
+  })
 })
 EOF
 
@@ -128,16 +143,16 @@ nnoremap <leader>ca <cmd>lua vim.lsp.buf.code_action()<CR>
 
 " script templates
 augroup script_templates
-		autocmd!
-		" When starting a new file ending in .sh, read skeleton file
-		autocmd BufNewFile *.sh 0read ~/.config/nvim/templates/bash_skeleton.sh | normal! G
+  autocmd!
+  " When starting a new file ending in .sh, read skeleton file
+  autocmd BufNewFile *.sh 0read ~/.config/nvim/templates/bash_skeleton.sh | normal! G
 augroup END
 
 " script permissions
 augroup script_permissions
-		autocmd!
-		" Make .sh scripts executable when we save it
-		autocmd BufWritePost *.sh silent! !chmod +x %
+  autocmd!
+  " Make .sh scripts executable when we save it
+  autocmd BufWritePost *.sh silent! !chmod +x %
 augroup END
 
 
